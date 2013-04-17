@@ -751,20 +751,14 @@ opts = OptionParser.new do |opts|
 end
 opts.parse!(ARGV)
 
-
-name   = "xykoBR"
-passwd = "barbara"
-world  = "br48"
-
-
-
-user = File.open('/info/user')
+user = File.open(File.expand_path(File.dirname(__FILE__) ).to_s + '/info/users')
 user.each do |line|
-	puts line
+	@p1   = line.split(':')[0]
+	@p2   = line.split(':')[1]
+	@p3   = line.split(':')[2]
 end
-exit(0)
 
-tw = Tribal.new(:name => name,:passwd => passwd,:world => world)
+tw = Tribal.new(:name => @p1,:passwd => @p2,:world => @p3)
 tw.connect
 puts "Connected: #{tw.logged?}"
 tw.atualiza_tropas
