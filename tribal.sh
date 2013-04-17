@@ -1,5 +1,4 @@
 #/bin/bash
-cd /opt/prjs/XykoRuby/tribal 
 wget http://br48.tribalwars.com.br/map/player.txt -O /tmp/playerbr48.txt
 wget http://br48.tribalwars.com.br/map/village.txt -O /tmp/villagebr48.txt
 wget http://br48.tribalwars.com.br/map/ally.txt -O /tmp/allybr48.txt
