@@ -755,6 +755,15 @@ opts.parse!(ARGV)
 name   = "xykoBR"
 passwd = "barbara"
 world  = "br48"
+
+
+
+user = File.open('/info/user')
+user.each do |line|
+	puts line
+end
+exit(0)
+
 tw = Tribal.new(:name => name,:passwd => passwd,:world => world)
 tw.connect
 puts "Connected: #{tw.logged?}"
