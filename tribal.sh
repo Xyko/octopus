@@ -15,7 +15,7 @@ if [ -f allybr48.txt ]
 then
  rm allybr48.txt
 fi
-mv /tmp/playerbr48.txt ~/Dropbox/CRuby/Tribal/lib/ 
-mv /tmp/villagebr48.txt ~/Dropbox/CRuby/Tribal/lib/
-mv /tmp/allybr48.txt ~/Dropbox/CRuby/Tribal/lib/ 
+mv /tmp/playerbr48.txt . 
+mv /tmp/villagebr48.txt . 
+mv /tmp/allybr48.txt . 
 
