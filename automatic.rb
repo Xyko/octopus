@@ -1,6 +1,5 @@
 require 'rubygems'
 
-
 tst = true
 while tst
 
@@ -9,6 +8,5 @@ while tst
 	break if $?.exitstatus != 0
     puts "Sleeping #{slp/60} minuts.."
 	sleep(slp)
-
 
 end
