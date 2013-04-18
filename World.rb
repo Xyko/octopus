@@ -9,7 +9,7 @@ class World
   def get_knowledge_base
       
   
-      players = File.open('player'+@name+'.txt')
+      players = File.open(File.expand_path(File.dirname(__FILE__) ).to_s'/player'+@name+'.txt')
       players.each do |line|
         
         player    =  line.to_s
@@ -33,7 +33,7 @@ class World
 
       end
       
-      villages = File.open('village'+@name+'.txt')
+      villages = File.open(File.expand_path(File.dirname(__FILE__) ).to_s/'village'+@name+'.txt')
       villages.each do |line|
         
         villa   =  line.to_s
@@ -58,7 +58,7 @@ class World
 
       end
       
-      allys = File.open('ally'+@name+'.txt')
+      allys = File.open(File.expand_path(File.dirname(__FILE__) ).to_s/'ally'+@name+'.txt')
       allys.each do |line|
 
         ally  =  line.to_s
