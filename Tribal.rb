@@ -22,6 +22,7 @@ class Tribal
 	def initialize(options = {})
 		 puts "Classe instanciada..." #com options: #{options[:args]}"
 		 @logged  = false
+		 #@master  = options[:master]
 		 @player  = Player.new
 		 @world   = World.new
 		 @tools   = World.new
@@ -74,7 +75,7 @@ class Tribal
 		@pagePrincipal = @agent.submit(form)
 		analisaBot(@pagePrincipal)
 		#@html = File.open('teste.html','w'){|f| f.write( @pagePrincipal.body.to_s)}
-		@logged =  @pagePrincipal.body.to_s.index('<title>_xykoBR').nil?
+		@logged =  @pagePrincipal.body.to_s.index("<title>_xykoBR").nil?
 	end
 
 	def analisaBot(page)
@@ -99,6 +100,11 @@ class Tribal
 	def logged?
 		return @logged
 	end
+
+	def master?
+		return @master
+	end
+
 
 	def atualiza_tropas
 		@player.villages.each  {|key, value|
@@ -228,11 +234,11 @@ class Tribal
 
 	def farmAll
 
+		puts @player.villages.size
+
 		@player.villages.each  {|key, ville|
 
 			@temp_vector = Hash.new
-
-			#ville = @player.villages[@player.villages.keys[0]]
 
 			puts ville.name
 
@@ -439,8 +445,9 @@ class Tribal
 	def attackSpy
 		cont = 0
 
-		#@player.villages.each  {|rkey, ville|
-		ville = getVillage("xykoBR")
+		ville = getVillage(master?)
+		puts ville.inspect
+		exit(0)
 
 			@temp_vector = janelaSpy(ville,9).sort_by {|_key, value| value}
 			cont = 0
@@ -464,7 +471,6 @@ class Tribal
 
 			}
 
-		#}
 	end
 
 	def firstId
@@ -680,7 +686,7 @@ exit(0)
 
 	def teste
 		@player.villages.each  {|key, ville|
-			janelaSpyTeste(ville,12)
+			puts ville.inspect
 		}
 	end
 
@@ -756,11 +762,20 @@ user.each do |line|
 	@p1   = line.split(':')[0]
 	@p2   = line.split(':')[1]
 	@p3   = line.split(':')[2]
+	@p4   = line.split(':')[3]
 end
 
-tw = Tribal.new(:name => @p1,:passwd => @p2,:world => @p3)
+name   = "xykoBR"
+passwd = "barbara"
+world  = "br48"
+tw = Tribal.new(:name => name,:passwd => passwd,:world => world)
+
+
+#tw = Tribal.new(:name => @p1,:passwd => @p2,:world => @p3,:master => @p4)
+
 tw.connect
 puts "Connected: #{tw.logged?}"
+
 tw.atualiza_tropas
 
 case options.c_type

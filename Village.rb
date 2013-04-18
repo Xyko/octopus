@@ -6,7 +6,7 @@ class Village
 	attr_accessor  :id, :name, :xcoord, :ycoord, :user_id, :spear, :sword, :axe, 
 	:spy, :light,  :heavy, :ram, :catapult, :knight, :snob, :wood, :clay, :iron, :delete,
 	:spear_cap, :sword_cap, :axe_cap, :light_cap,  :heavy_cap, :farmed_cap, 
-	:distance, :h_capacity, :resources, :continent
+	:distance, :h_capacity, :resources, :continent, :master
 	# descontinuados :archer, :marcher,
 
 	def initialize(options = {})
@@ -55,5 +55,6 @@ class Village
 							self.light_cap.to_i	* self.light.to_i	+
 							self.heavy_cap.to_i	* self.heavy.to_i
 	end
+
 
 end
