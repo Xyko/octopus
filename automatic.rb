@@ -10,6 +10,7 @@ while tst
 	f.puts agora 
 	#system("ruby Tribal.rb -c farm")
 	#break if $?.exitstatus != 0
+	f.close
 	sleep(20)
 
 end
