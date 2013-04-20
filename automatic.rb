@@ -9,7 +9,7 @@ while tst
 	agora = "Current Time : " + time1.day.to_s +  "/" +time1.month.to_s + " "+ time1.hour.to_s + ":" + time1.min.to_s + ":" + time1.sec.to_s
 	f.puts agora 
 	#system("ruby Tribal.rb -c farm")
-	break if $?.exitstatus != 0
+	#break if $?.exitstatus != 0
 	sleep(20)
 
 end
