@@ -4,9 +4,9 @@ tst = true
 while tst
 
 	slp = 60 * (30 + Random.rand(30))
-	system( "uptime >> lixo.txt")#;ruby Tribal.rb -c farm")
+	system("date >> lixo.txt")#;ruby Tribal.rb -c farm")
 	break if $?.exitstatus != 0
-    system('cat "Sleeping #{slp/60} minuts.." >> lixo.txt')
-	sleep(1)
+    system("date aguarde #{slp/60} minutos.. >> lixo.txt")
+	sleep(20)
 
 end
