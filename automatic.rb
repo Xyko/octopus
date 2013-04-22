@@ -7,7 +7,7 @@ while tst
 	f = File.open(File.expand_path(File.dirname(__FILE__) ).to_s + "/controle","a")
 	time1 = Time.now
 	agora = "Current Time : " + time1.day.to_s +  "/" +time1.month.to_s + " "+ time1.hour.to_s + ":" + time1.min.to_s + ":" + time1.sec.to_s
-	f.puts agora 
+	f.puts "#{agora} waiting #{slp/60}" 
 	system("ruby Tribal.rb -c farm")
 	break if $?.exitstatus != 0
 	f.close unless f.closed?

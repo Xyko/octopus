@@ -202,7 +202,21 @@ class Tribal
 			return true
 	end
 
-	def nearerTo(xi, yi)
+	def checkHaul(ville, target, type)
+		haul = ville.getVar("#{type}").to_i * ville.getVar("#{type}_cap").to_i
+		if haul >= target.resources
+			ville.setVar("#{type}",	target.resources / ville.getVar("#{type}_cap"))
+			target.resources = 0
+			return ville.getVar("#{type}")
+		else
+			target.resources -= haul
+			ret = ville.getVar("#{type}")
+			ville.setVar("#{type}", 0)
+			return ret
+		end
+	end
+
+	def nearTo(xi, yi)
 		menor = 10
 		key   = ""
 		@player.villages.each  {|rkey, rvalue|
@@ -218,25 +232,35 @@ class Tribal
 		return @player.villages[key]
 	end
 
-	def checkHaul(ville, target, type)
-		haul = ville.getVar("#{type}").to_i * ville.getVar("#{type}_cap").to_i
-		if haul >= target.resources
-			ville.setVar("#{type}",	target.resources / ville.getVar("#{type}_cap"))
-			target.resources = 0
-			return ville.getVar("#{type}")
-		else
-			target.resources -= haul
-			ret = ville.getVar("#{type}")
-			ville.setVar("#{type}", 0)
-			return ret
-		end
+	def vectorNearTo (xi,yi)
+		@player.villages.each  {|rkey, rvalue|
+			xf = rvalue.xcoord.to_i
+			yf = rvalue.ycoord.to_i
+			rvalue.setVar("distance",Math.sqrt((xi - xf) ** 2 + (yi - yf) ** 2))
+		}
 	end
 
-	def farmAll
+	def getOrdenedVectorNearTo (target)
+		vector = Hash.new
+		vectorNearTo(target.xcoord,target.ycoord).each.sort_by { |key,value|
+			vector[value.name] = value.distance.to_i
+		}
+		return vector.sort_by {|name,dist| dist}
+	end
 
-		puts @player.villages.size
+	def selectCandidates (candidates)
+		aux = candidates.clone
+		candidates.each {|k,v|
+			ville = getVillage(k)
+			#aux.delete(k) if !(
+			puts ville.getVar("heavy").to_i + ville.getVar("light").to_i > 20
+		}
+		return aux
+	end
 
-		@player.villages.each  {|key, ville|
+	def farmAll (ville)
+
+		#@player.villages.each  {|rkey, ville|
 
 			@temp_vector = Hash.new
 
@@ -279,6 +303,8 @@ class Tribal
 							:iron 		=> iron.to_i,
 							:delete 	=> "")
 
+						#candidates = selectCandidates(getOrdenedVectorNearTo(target))
+
 						@vetAttack = Hash.new
 						attackWith(ville, "light") 
 						attackWith(ville, "heavy") 
@@ -307,84 +333,10 @@ class Tribal
 				end
 
 			end
-		}
+
+		#}
 
 	end
-
-
-# 	def farmAll2
-
-# 		ville = @player.villages[@player.villages.keys[0]]
-
-# 		pageReports = @agent.get("http://"+@world.name+".tribalwars.com.br/game.php?village="+firstId.to_s+"&mode=attack&screen=report")
-
-# 		analisaBot(pageReports)
-
-# 		event = pageReports.parser.xpath('//*[@id="report_list"]')
-
-# 		event.children.reverse.each {|e|
-
-# 			case e.elements[0].elements.size.to_s
-# 				when "4"
-# 					index = 2
-# 				when "5"
-# 					index = 3
-# 				else
-# 				  index = 0
-# 			end
-
-# 			if index == 2 || index == 3
-
-# 				linkText  = e.elements[0].elements[index].children[1].attribute_nodes[0].to_s
-# 				link = pageReports.link_with(:href  => linkText)
-# 				pageReport = link.click
-
-# 				wood = pageReport.parser.xpath('//table[@id="attack_spy"]').inner_text.to_s.gsub(/[a-zA-Z:çá()éí.]/,'').split[0].to_i
-# 				clay = pageReport.parser.xpath('//table[@id="attack_spy"]').inner_text.to_s.gsub(/[a-zA-Z:çá()éí.]/,'').split[1].to_i
-# 				iron = pageReport.parser.xpath('//table[@id="attack_spy"]').inner_text.to_s.gsub(/[a-zA-Z:çá()éí.]/,'').split[2].to_i
-# 				@capacity = wood + clay + iron
-				
-# 				if wood > 25 || clay > 25 || iron > 25
-
-# 					coords = pageReport.parser.xpath('//*[@id="attack_info_def"]')
-
-# 					xcoord = /\([0-9]{3}[|][0-9]{3}\)/m.match(link.text).to_s.gsub(/[()]/,'').split("|")[0]
-# 					ycoord = /\([0-9]{3}[|][0-9]{3}\)/m.match(link.text).to_s.gsub(/[()]/,'').split("|")[1]
-
-# 					puts "Analizando #{xcoord}/#{ycoord} com #{wood+clay+iron}." 
-
-# 					target = Village.new(
-# 						:xcoord 	=> xcoord,
-# 						:ycoord 	=> ycoord,
-# 						:wood 		=> wood.to_i,
-# 						:clay 		=> clay.to_i,
-# 						:iron 		=> iron.to_i,
-# 						:delete 	=> "")
-
-# 					@vetAttack = Hash.new
-# 					attackWith(ville, "light") 
-# 					attackWith(ville, "heavy") 
-# 					# attackWith(ville, :walkers) 
-
-# 					if @vetAttack.size > 0
-# 						@vetAttack = @vetAttack.merge(setTroops "spy=1")
-# 						puts "Atacando #{xcoord}/#{ycoord} com #{@vetAttack}. Restam: #{ville.light} #{ville.heavy} #{ville.spear} #{ville.sword} #{ville.axe}"
-# 						ataqueTropas(ville,target,@vetAttack,"attack")
-# 						delete = pageReport.link_with(:href  => /(.*action=del_one*.)/).uri
-# 						pageDelete = @agent.get('http://'+@world.name+'.tribalwars.com.br'+ delete.to_s)
-# 						analisaBot(pageDelete) 
-# 					end
-
-# 				end
-
-# 			end
-
-# 		}
-# 	end
-
-
-
-
 
 
 	def attackWith (ville, type)
@@ -683,8 +635,8 @@ exit(0)
 	end
 
 	def teste
-		@player.villages.each  {|key, ville|
-			puts ville.inspect
+		getOrdenedVectorNearTo(615,327).each {|k,v|
+			puts getVillage(k)
 		}
 	end
 
@@ -782,7 +734,8 @@ case options.c_type
 		tw.attackSpy
 	when :farm
 		puts "farm+"
-		tw.farmAll
+		tw.farmAll(tw.getVillage("xykoBR"))
+		tw.farmAll(tw.getVillage("xykoBR3"))
 	when :fake
 		puts "fake+"
 		tw.fake("")
