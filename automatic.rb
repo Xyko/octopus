@@ -22,7 +22,6 @@ while tst
 	if $?.exitstatus != 0
 		log.fatal("saida inexperada....")
 	end
-	system("ls -ltr")
 	sleep(slp)
 
 end
