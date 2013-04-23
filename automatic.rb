@@ -1,13 +1,15 @@
 require 'rubygems'
 require 'logger'
 
-log  = Logger.new("a.log") 
-log.level = Logger::INFO
+  log  = Logger.new("a.log") 
+  log.level = Logger::INFO
 
 tst = true
 while tst
 
 	slp = 60 * (15 + Random.rand(15))
+	time1 = Time.now
+	time2 = time1 + slp
 	log.info(sprintf "Current Time : %s/%s   %s:%s -> %s:%s.\n",
 	time1.day.to_s,
 	time1.month.to_s,
@@ -15,14 +17,12 @@ while tst
 	time1.min.to_s,
 	time2.hour.to_s,
 	time2.min.to_s)
-	time1 = Time.now
-	time2 = time1 + slp
-	time2 = time1 + slp
 	system("ruby Tribal.rb -c farm")
 	log.info("sleeping....")
 	if $?.exitstatus != 0
-		info.fatal("saida inexperada....")
+		log.fatal("saida inexperada....")
 	end
+	system("ls -ltr")
 	sleep(slp)
 
 end
