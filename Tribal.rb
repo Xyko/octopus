@@ -735,8 +735,11 @@ case options.c_type
 	when :farm
 		puts "farm+"
 		tw.farmAll(tw.getVillage("xykoBR"))
+		tw.farmAll(tw.getVillage("xykoBR2"))
 		tw.farmAll(tw.getVillage("xykoBR3"))
-	when :fake
+		tw.farmAll(tw.getVillage("xykoBR4"))
+		tw.farmAll(tw.getVillage("xykoBR5"))
+when :fake
 		puts "fake+"
 		tw.fake("")
 	when :ally
