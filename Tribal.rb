@@ -248,23 +248,16 @@ class Tribal
 		return vector.sort_by {|name,dist| dist}
 	end
 
-	def selectCandidates (candidates)
-		aux = candidates.clone
-		candidates.each {|k,v|
-			ville = getVillage(k)
-			#aux.delete(k) if !(
-			puts ville.getVar("heavy").to_i + ville.getVar("light").to_i > 20
-		}
-		return aux
-	end
 
-	def farmAll (ville)
+	def farmAll #(ville)
+
+		@minimalFarmLimit = 300
 
 		#@player.villages.each  {|rkey, ville|
 
 			@temp_vector = Hash.new
 
-			puts ville.name
+			#puts ville.name
 
 			pageReports = @agent.get("http://"+@world.name+".tribalwars.com.br/game.php?village="+firstId.to_s+"&mode=attack&screen=report")
 			analisaBot(pageReports)
@@ -303,22 +296,34 @@ class Tribal
 							:iron 		=> iron.to_i,
 							:delete 	=> "")
 
-						#candidates = selectCandidates(getOrdenedVectorNearTo(target))
+						candidates = getOrdenedVectorNearTo(target)
 
-						@vetAttack = Hash.new
-						attackWith(ville, "light") 
-						attackWith(ville, "heavy") 
-						# attackWith(ville, :walkers) 
+						candidates.each {|ville_name,v|
+							
+							ville = getVillage(ville_name)
+						
+							@vetAttack = Hash.new
+							#puts "Antes .... #{index}/#{links.size} #{ville.name} Antes : #{ville.light} #{ville.heavy} #{ville.spear} #{ville.sword} #{ville.axe}"
 
-						if @vetAttack.size > 0
-							@vetAttack = @vetAttack.merge(setTroops "spy=1")
-							puts "#{index}/#{links.size} #{ville.name} atacando #{xcoord}/#{ycoord} com #{@vetAttack}. Restam: #{ville.light} #{ville.heavy} #{ville.spear} #{ville.sword} #{ville.axe}"
-							ataqueTropas(ville,target,@vetAttack,"attack")
-							delete = pageReport.link_with(:href  => /(.*action=del_one*.)/).uri
-							pageDelete = @agent.get('http://'+@world.name+'.tribalwars.com.br'+ delete.to_s)
-							analisaBot(pageDelete) 
-						end
+							attackWith(ville, "light") 		if @capacity > @minimalFarmLimit 
+							attackWith(ville, "heavy") 		if @capacity > @minimalFarmLimit 							
+							attackWith(ville, "walkers")   	if @capacity > @minimalFarmLimit 
 
+							#puts "Depois.... #{index}/#{links.size} #{ville.name} Depois: #{ville.light} #{ville.heavy} #{ville.spear} #{ville.sword} #{ville.axe}"
+							#puts @vetAttack.inspect
+							#puts " "
+
+							if @vetAttack.size > 0
+								@vetAttack = @vetAttack.merge(setTroops "spy=1")
+								puts "Depois.... #{index}/#{links.size} #{ville.name} atacando #{xcoord}/#{ycoord} com #{@vetAttack}. Restam: #{ville.light} #{ville.heavy} #{ville.spear} #{ville.sword} #{ville.axe}"
+								ataqueTropas(ville,target,@vetAttack,"attack")
+								delete = true
+								delete = pageReport.link_with(:href  => /(.*action=del_one*.)/).uri
+								pageDelete = @agent.get('http://'+@world.name+'.tribalwars.com.br'+ delete.to_s)
+								analisaBot(pageDelete) 
+							end
+
+						}
 
 					else
 						delete = true
@@ -331,6 +336,7 @@ class Tribal
 					pageDelete = @agent.get('http://'+@world.name+'.tribalwars.com.br'+ link_to_delete.to_s)
 					analisaBot(pageDelete) 
 				end
+		puts " "
 
 			end
 
@@ -339,29 +345,115 @@ class Tribal
 	end
 
 
-	def attackWith (ville, type)
+	def attackWith(ville, type)
+
+		case type
+			when "light"
+				attackWithOthers(ville, type)
+			when "heavy"
+				attackWithOthers(ville, type) 
+			when "walkers"
+				attackWithWalkers(ville)
+			else
+				puts "Vazia..."
+		end
+
+	end
 
 
-		# case type
-		# 	when :light
-		# 		if ville.getVar(type).to_i * ville.getVar(type+"_cap").to_i > @capacity && @capacity > 0
-		# 			togo 	   = (@capacity / ville.getVar(type+"_cap")).to_i
-		# 			remaining  = ville.getVar(type).to_i - togo
-		# 			if togo > 0 
-		# 				togo += 1 if remaining >= 1
-		# 				ville.setVar(type,remaining-1)
-		# 				@vetAttack = @vetAttack.merge(setTroops "#{type}=#{togo}")
-		# 				@capacity -= togo * ville.getVar(type+"_cap").to_i
-		# 			end		
-		# 		end 			
-		# 	when :heavy
-		# 	when :walkers
-		# 	else
-		# 		puts "Vazia..."
-		# end
+	def normalizeTroops
 
+		#puts " #{@capacity} #{@_spear} #{@_sword} #{@_axe}"
 
-		if ville.getVar(type).to_i * ville.getVar(type+"_cap").to_i > @capacity && @capacity > 0
+		def byZero(itsZero)
+		 	return "1" if itsZero > 0
+		 	return "0"
+		end
+
+		def _spear
+			@capacity  -= @_spear_cap
+			@_spear    -= 1
+		end
+
+		def _sword
+			@capacity  -=  @_sword_cap 
+			@_sword    -= 1
+		end
+
+		def _axe
+			@capacity  -= @_axe_cap
+			@_axe      -= 1
+		end
+
+		vetVar = byZero(@_spear) + byZero(@_sword) + byZero(@_axe)
+
+		case vetVar
+			when "111"
+				_spear
+				_sword
+				_axe
+			when "110"
+				_spear
+				_sword
+			when "101"
+				_spear
+				_axe
+			when "011"
+				_sword
+				_axe
+			when "010" 
+				_sword
+			when "001"
+				_axe
+			when "000"
+				puts "normalizeTroops -> vetVar vetor vazio"
+				return
+			else
+				puts "normalizeTroops -> vetVar não definido #{vetVar}"
+				exit(0)
+		end
+
+		normalizeTroops if @capacity > @minimalFarmLimit 
+
+		return
+		
+		#puts "#{@capacity} #{@_spear} #{@_sword} #{@_axe}"
+	
+	end
+
+	def attackWithWalkers(ville) 
+		 
+		@_spear  		= ville.getVar("spear").to_i
+		@_sword 		= ville.getVar("sword").to_i
+		@_axe 			= ville.getVar("axe").to_i
+		@_spear_cap 	= ville.getVar("spear_cap").to_i
+		@_sword_cap 	= ville.getVar("sword_cap").to_i
+		@_axe_cap 		= ville.getVar("axe_cap").to_i
+
+		normalizeTroops
+
+		spear = ville.getVar("spear").to_i - @_spear.to_i 
+		sword = ville.getVar("sword").to_i - @_sword.to_i 
+		axe   = ville.getVar("axe").to_i   - @_axe.to_i    
+
+		if spear + sword + axe > 3
+
+			ville.setVar("spear" ,@_spear)
+			ville.setVar("sword" ,@_sword)
+			ville.setVar("axe"   ,@_axe)
+
+			@vetAttack = @vetAttack.merge(setTroops "spear=#{spear.to_i}")
+			@vetAttack = @vetAttack.merge(setTroops "sword=#{sword.to_i}")
+			@vetAttack = @vetAttack.merge(setTroops "axe=#{axe.to_i}")
+
+			puts "End #{@capacity} #{spear} #{sword} #{axe} #{@_spear} #{@_sword} #{@_axe}"
+
+		end
+
+	end
+
+	def attackWithOthers(ville, type)
+		if ville.getVar(type).to_i * ville.getVar(type+"_cap").to_i > @capacity #&& @capacity > 0
 			togo 	   = (@capacity / ville.getVar(type+"_cap")).to_i
 			remaining  = ville.getVar(type).to_i - togo
 			if togo > 0 
@@ -371,10 +463,6 @@ class Tribal
 				@capacity -= togo * ville.getVar(type+"_cap").to_i
 			end		
 		end 
-
-
-
-		
 	end
 
 
@@ -422,6 +510,7 @@ class Tribal
 			}
 
 	end
+
 
 	def firstId
 		return @player.villages[@player.villages.keys[0]].getVar("id")
@@ -734,12 +823,15 @@ case options.c_type
 		tw.attackSpy
 	when :farm
 		puts "farm+"
-		tw.farmAll(tw.getVillage("xykoBR"))
-		tw.farmAll(tw.getVillage("xykoBR2"))
-		tw.farmAll(tw.getVillage("xykoBR3"))
-		tw.farmAll(tw.getVillage("xykoBR4"))
-		tw.farmAll(tw.getVillage("xykoBR5"))
-when :fake
+		tw.farmAll
+		# tw.farmAll(tw.getVillage("xykoBR"))
+		# tw.farmAll(tw.getVillage("xykoBR2"))
+		# tw.farmAll(tw.getVillage("xykoBR3"))
+		# tw.farmAll(tw.getVillage("xykoBR4"))
+		# tw.farmAll(tw.getVillage("xykoBR5"))
+		# tw.farmAll(tw.getVillage("xykoBR6"))
+		# tw.farmAll(tw.getVillage("xykoBR7"))
+	when :fake
 		puts "fake+"
 		tw.fake("")
 	when :ally
