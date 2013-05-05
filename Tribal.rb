@@ -709,12 +709,12 @@ arrive_time = e.children.to_s.split(':')[0].to_i * 3660 + e.children.to_s.split(
 puts e.children
 puts arrive_time
 exit(0)
-					# attackTo  = e.parent().parent().children()[2].text.strip
-					# arriveIn  = e.parent().parent().children()[6].text.strip
-					# countDown = e.parent().parent().children()[7].text.strip
-				    # linkText  = e.parent().parent().children()[2].children()[1].attribute_nodes()[0].to_s
-					# link = @pageIncoming.link_with(:href  => linkText)
-					# printf "%-25s \t %10s \t %10s \t %20s \t %20s \n" ,attackTo,arriveIn,countDown,linkText,link
+				# attackTo  = e.parent().parent().children()[2].text.strip
+				# arriveIn  = e.parent().parent().children()[6].text.strip
+				# countDown = e.parent().parent().children()[7].text.strip
+			    # linkText  = e.parent().parent().children()[2].children()[1].attribute_nodes()[0].to_s
+				# link = @pageIncoming.link_with(:href  => linkText)
+				# printf "%-25s \t %10s \t %10s \t %20s \t %20s \n" ,attackTo,arriveIn,countDown,linkText,link
 
 				}
 			sleep_time = prng.rand(360)
