@@ -299,15 +299,19 @@ class Tribal
 						candidates = getOrdenedVectorNearTo(target)
 
 						candidates.each {|ville_name,v|
-							
+						
+						if ville_name == "xykoBRB"
+
 							ville = getVillage(ville_name)
 						
 							@vetAttack = Hash.new
 							#puts "Antes .... #{index}/#{links.size} #{ville.name} Antes : #{ville.light} #{ville.heavy} #{ville.spear} #{ville.sword} #{ville.axe}"
 
-							attackWith(ville, "light") 		if @capacity > @minimalFarmLimit 
-							attackWith(ville, "heavy") 		if @capacity > @minimalFarmLimit 							
-							attackWith(ville, "walkers")   	if @capacity > @minimalFarmLimit 
+							puts " #{ville_name} #{ville.farmed_cap}" 
+
+							attackWith(ville, "light") 		if @capacity > @minimalFarmLimit && ville.farmed_cap > 0
+							attackWith(ville, "heavy") 		if @capacity > @minimalFarmLimit && ville.farmed_cap > 0							
+							attackWith(ville, "walkers")   	if @capacity > @minimalFarmLimit && ville.farmed_cap > 0
 
 							#puts "Depois.... #{index}/#{links.size} #{ville.name} Depois: #{ville.light} #{ville.heavy} #{ville.spear} #{ville.sword} #{ville.axe}"
 							#puts @vetAttack.inspect
@@ -322,6 +326,9 @@ class Tribal
 								pageDelete = @agent.get('http://'+@world.name+'.tribalwars.com.br'+ delete.to_s)
 								analisaBot(pageDelete) 
 							end
+
+						end
+
 
 						}
 
@@ -405,6 +412,8 @@ class Tribal
 				_sword
 			when "001"
 				_axe
+			when "100"
+				_spear
 			when "000"
 				puts "normalizeTroops -> vetVar vetor vazio"
 				return
