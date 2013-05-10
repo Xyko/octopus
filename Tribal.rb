@@ -249,15 +249,11 @@ class Tribal
 	end
 
 
-	def farmAll #(ville)
+	def farmAll
 
 		@minimalFarmLimit = 300
 
-		#@player.villages.each  {|rkey, ville|
-
 			@temp_vector = Hash.new
-
-			#puts ville.name
 
 			pageReports = @agent.get("http://"+@world.name+".tribalwars.com.br/game.php?village="+firstId.to_s+"&mode=attack&screen=report")
 			analisaBot(pageReports)
@@ -266,9 +262,9 @@ class Tribal
 
 			puts "Analisando #{links.size} relatórios..."
 			links.each_with_index do |link,index|
-				pageReport = link.click
-				analisaBot(pageReport)
-				link_to_delete = pageReport.link_with(:href  => /(.*action=del_one*.)/).uri
+				@pageReport = link.click
+				analisaBot(@pageReport)
+				link_to_delete = @pageReport.link_with(:href  => /(.*action=del_one*.)/).uri
 				coordenadas = link.text
 				alvo = coordenadas[coordenadas.rindex('(')+1,coordenadas.rindex(')')-coordenadas.rindex('(')-1].strip.split("|")
 				alvo_texto = coordenadas[coordenadas.rindex('(')+1,coordenadas.rindex(')')-coordenadas.rindex('(')-1].strip.split("|")
@@ -278,9 +274,9 @@ class Tribal
 
 				if !@temp_vector.key?("#{xcoord} #{ycoord}") then
 
-					wood = pageReport.parser.xpath('//table[@id="attack_spy"]').inner_text.to_s.gsub(/[a-zA-Z:çá()éí.]/,'').split[0].to_i
-					clay = pageReport.parser.xpath('//table[@id="attack_spy"]').inner_text.to_s.gsub(/[a-zA-Z:çá()éí.]/,'').split[1].to_i
-					iron = pageReport.parser.xpath('//table[@id="attack_spy"]').inner_text.to_s.gsub(/[a-zA-Z:çá()éí.]/,'').split[2].to_i
+					wood = @pageReport.parser.xpath('//table[@id="attack_spy"]').inner_text.to_s.gsub(/[a-zA-Z:çá()éí.]/,'').split[0].to_i
+					clay = @pageReport.parser.xpath('//table[@id="attack_spy"]').inner_text.to_s.gsub(/[a-zA-Z:çá()éí.]/,'').split[1].to_i
+					iron = @pageReport.parser.xpath('//table[@id="attack_spy"]').inner_text.to_s.gsub(/[a-zA-Z:çá()éí.]/,'').split[2].to_i
 					@capacity = wood + clay + iron
 
 					if wood > 100 || clay > 100 || iron > 100 && wood + clay + iron > 300
@@ -299,36 +295,36 @@ class Tribal
 						candidates = getOrdenedVectorNearTo(target)
 
 						candidates.each {|ville_name,v|
-						
-						if ville_name == "xykoBRB"
 
 							ville = getVillage(ville_name)
-						
-							@vetAttack = Hash.new
-							#puts "Antes .... #{index}/#{links.size} #{ville.name} Antes : #{ville.light} #{ville.heavy} #{ville.spear} #{ville.sword} #{ville.axe}"
 
-							puts " #{ville_name} #{ville.farmed_cap}" 
+							if ville.farmed_cap > 300
 
-							attackWith(ville, "light") 		if @capacity > @minimalFarmLimit && ville.farmed_cap > 0
-							attackWith(ville, "heavy") 		if @capacity > @minimalFarmLimit && ville.farmed_cap > 0							
-							attackWith(ville, "walkers")   	if @capacity > @minimalFarmLimit && ville.farmed_cap > 0
+								def internalAttack (ville,target,msg)
+									if @vetAttack.size > 0
+										puts "internalAttack #{ville.farmed_cap} #{ville.farmed_cap} #{@capacity}	#{@vetAttack}"
+										@vetAttack = @vetAttack.merge(setTroops "spy=1")
+										puts "#{msg} com #{@vetAttack}. Restam: #{ville.light} #{ville.heavy} #{ville.spear} #{ville.sword} #{ville.axe}"
+										ataqueTropas(ville,target,@vetAttack,"attack")
+										if  @capacity < 300
+											delete = @pageReport.link_with(:href  => /(.*action=del_one*.)/).uri
+											pageDelete = @agent.get('http://'+@world.name+'.tribalwars.com.br'+ delete.to_s)
+											analisaBot(pageDelete)
+										end 
+									end
+								end
 
-							#puts "Depois.... #{index}/#{links.size} #{ville.name} Depois: #{ville.light} #{ville.heavy} #{ville.spear} #{ville.sword} #{ville.axe}"
-							#puts @vetAttack.inspect
-							#puts " "
+								msg = "#{index}/#{links.size} #{ville.name} atacando #{xcoord}/#{ycoord}" 
 
-							if @vetAttack.size > 0
-								@vetAttack = @vetAttack.merge(setTroops "spy=1")
-								puts "Depois.... #{index}/#{links.size} #{ville.name} atacando #{xcoord}/#{ycoord} com #{@vetAttack}. Restam: #{ville.light} #{ville.heavy} #{ville.spear} #{ville.sword} #{ville.axe}"
-								ataqueTropas(ville,target,@vetAttack,"attack")
-								delete = true
-								delete = pageReport.link_with(:href  => /(.*action=del_one*.)/).uri
-								pageDelete = @agent.get('http://'+@world.name+'.tribalwars.com.br'+ delete.to_s)
-								analisaBot(pageDelete) 
+								@vetAttack = Hash.new
+								attackWithHorses(ville)		if @capacity > @minimalFarmLimit
+								internalAttack(ville,target,msg) 
+
+								@vetAttack = Hash.new
+								attackWithWalkers(ville)	if @capacity > @minimalFarmLimit 
+								internalAttack(ville,target,msg) 
+
 							end
-
-						end
-
 
 						}
 
@@ -347,28 +343,10 @@ class Tribal
 
 			end
 
-		#}
-
 	end
 
 
-	def attackWith(ville, type)
-
-		case type
-			when "light"
-				attackWithOthers(ville, type)
-			when "heavy"
-				attackWithOthers(ville, type) 
-			when "walkers"
-				attackWithWalkers(ville)
-			else
-				puts "Vazia..."
-		end
-
-	end
-
-
-	def normalizeTroops
+	def normalizeTroops(type)
 
 		#puts " #{@capacity} #{@_spear} #{@_sword} #{@_axe}"
 
@@ -392,37 +370,71 @@ class Tribal
 			@_axe      -= 1
 		end
 
-		vetVar = byZero(@_spear) + byZero(@_sword) + byZero(@_axe)
-
-		case vetVar
-			when "111"
-				_spear
-				_sword
-				_axe
-			when "110"
-				_spear
-				_sword
-			when "101"
-				_spear
-				_axe
-			when "011"
-				_sword
-				_axe
-			when "010" 
-				_sword
-			when "001"
-				_axe
-			when "100"
-				_spear
-			when "000"
-				puts "normalizeTroops -> vetVar vetor vazio"
-				return
-			else
-				puts "normalizeTroops -> vetVar não definido #{vetVar}"
-				exit(0)
+		def _light
+			@capacity  -=  @_light_cap 
+			@_light    -= 1
 		end
 
-		normalizeTroops if @capacity > @minimalFarmLimit 
+		def _heavy
+			@capacity  -= @_heavy_cap
+			@_heavy      -= 1
+		end
+
+
+		if type == :walkers
+			vetVarWalkers	= byZero(@_spear) + byZero(@_sword) + byZero(@_axe)
+			case vetVarWalkers
+				when "111"
+					_spear
+					_sword
+					_axe
+				when "110"
+					_spear
+					_sword
+				when "101"
+					_spear
+					_axe
+				when "011"
+					_sword
+					_axe
+				when "010" 
+					_sword
+				when "001"
+					_axe
+				when "100"
+					_spear
+				when "010"
+					puts "normalizeTroops -> vetVar vetor apenas com sword... retornando"
+					return	
+				when "000"
+					puts "normalizeTroops -> vetVar vetor walkwrs vazio... retornando"
+					return
+				else
+					puts "normalizeTroops -> vetVar não definido #{vetVar}"
+					exit(0)
+			end
+		end
+
+		if type == :horses
+			vetVarHorses	= byZero(@_light) + byZero(@_heavy) 
+			case vetVarHorses
+				when "11"
+					_light
+					_heavy
+				when "10"
+					_light
+				when "01"
+					_heavy
+				when "00"
+					puts "normalizeTroops -> vetVar vetor horses vazio... retornando"
+					return
+				else
+					puts "normalizeTroops -> vetVar não definido #{vetVar}"
+					exit(0)
+			end
+		end
+
+		normalizeTroops(type) if @capacity > @minimalFarmLimit 
 
 		return
 		
@@ -439,7 +451,7 @@ class Tribal
 		@_sword_cap 	= ville.getVar("sword_cap").to_i
 		@_axe_cap 		= ville.getVar("axe_cap").to_i
 
-		normalizeTroops
+		normalizeTroops(:walkers)
 
 		spear = ville.getVar("spear").to_i - @_spear.to_i 
 		sword = ville.getVar("sword").to_i - @_sword.to_i 
@@ -455,14 +467,41 @@ class Tribal
 			@vetAttack = @vetAttack.merge(setTroops "sword=#{sword.to_i}")
 			@vetAttack = @vetAttack.merge(setTroops "axe=#{axe.to_i}")
 
-			puts "End #{@capacity} #{spear} #{sword} #{axe} #{@_spear} #{@_sword} #{@_axe}"
+		end
+
+	end
+
+	def attackWithHorses(ville) 
+		 
+		@_light  		= ville.getVar("light").to_i
+		@_heavy 		= ville.getVar("heavy").to_i
+		@_light_cap 	= ville.getVar("light_cap").to_i
+		@_heavy_cap 	= ville.getVar("heavy_cap").to_i
+
+		normalizeTroops(:horses)
+
+		light = ville.getVar("light").to_i - @_light.to_i 
+		heavy = ville.getVar("heavy").to_i - @_heavy.to_i 
+ 
+
+		if light + heavy > 3
+
+			ville.setVar("light" ,@_light)
+			ville.setVar("heavy" ,@_heavy)
+
+			@vetAttack = @vetAttack.merge(setTroops "light=#{light.to_i}")
+			@vetAttack = @vetAttack.merge(setTroops "heavy=#{heavy.to_i}")
 
 		end
 
 	end
 
 	def attackWithOthers(ville, type)
-		if ville.getVar(type).to_i * ville.getVar(type+"_cap").to_i > @capacity #&& @capacity > 0
+		if ville.getVar(type).to_i * ville.getVar(type+"_cap").to_i > @capacity 
+
+			# puts " Parcial #{type} capacity #{ville.getVar(type).to_i * ville.getVar(type+"_cap").to_i}"
+			# puts " #{@capacity}"
+
 			togo 	   = (@capacity / ville.getVar(type+"_cap")).to_i
 			remaining  = ville.getVar(type).to_i - togo
 			if togo > 0 
@@ -470,10 +509,18 @@ class Tribal
 				ville.setVar(type,remaining-1)
 				@vetAttack = @vetAttack.merge(setTroops "#{type}=#{togo}")
 				@capacity -= togo * ville.getVar(type+"_cap").to_i
-			end		
+			end
+		else
+
+			# puts " Tudo #{type} capacity #{ville.getVar(type).to_i * ville.getVar(type+"_cap").to_i}"
+			# puts " #{@capacity}"
+
+			togo 	   = (@capacity / ville.getVar(type+"_cap")).to_i
+			ville.setVar(type,0)
+			@vetAttack = @vetAttack.merge(setTroops "#{type}=#{togo}")
+			@capacity -= togo * ville.getVar(type+"_cap").to_i
 		end 
 	end
-
 
 	def inAttack
 
@@ -489,7 +536,6 @@ class Tribal
 		puts inAttackVet
 
 	end
-
 
 	def attackSpy
 		cont = 0
@@ -519,7 +565,6 @@ class Tribal
 			}
 
 	end
-
 
 	def firstId
 		return @player.villages[@player.villages.keys[0]].getVar("id")
