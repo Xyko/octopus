@@ -317,11 +317,11 @@ class Tribal
 								msg = "#{index}/#{links.size} #{ville.name} atacando #{xcoord}/#{ycoord}" 
 
 								@vetAttack = Hash.new
-								attackWithHorses(ville)		if @capacity > @minimalFarmLimit
+								attackWithWalkers(ville)	if @capacity > @minimalFarmLimit 
 								internalAttack(ville,target,msg) 
 
 								@vetAttack = Hash.new
-								attackWithWalkers(ville)	if @capacity > @minimalFarmLimit 
+								attackWithHorses(ville)		if @capacity > @minimalFarmLimit
 								internalAttack(ville,target,msg) 
 
 							end
@@ -355,6 +355,11 @@ class Tribal
 		 	return "0"
 		end
 
+		def byTwenty(itsZero)
+		 	return "1" if itsZero > 20
+		 	return "0"
+		end
+
 		def _spear
 			@capacity  -= @_spear_cap
 			@_spear    -= 1
@@ -377,9 +382,8 @@ class Tribal
 
 		def _heavy
 			@capacity  -= @_heavy_cap
-			@_heavy      -= 1
+			@_heavy    -= 1
 		end
-
 
 		if type == :walkers
 			vetVarWalkers	= byZero(@_spear) + byZero(@_sword) + byZero(@_axe)
@@ -457,17 +461,13 @@ class Tribal
 		sword = ville.getVar("sword").to_i - @_sword.to_i 
 		axe   = ville.getVar("axe").to_i   - @_axe.to_i    
 
-		if spear + sword + axe > 3
+		ville.setVar("spear" ,@_spear)
+		ville.setVar("sword" ,@_sword)
+		ville.setVar("axe"   ,@_axe)
 
-			ville.setVar("spear" ,@_spear)
-			ville.setVar("sword" ,@_sword)
-			ville.setVar("axe"   ,@_axe)
-
-			@vetAttack = @vetAttack.merge(setTroops "spear=#{spear.to_i}")
-			@vetAttack = @vetAttack.merge(setTroops "sword=#{sword.to_i}")
-			@vetAttack = @vetAttack.merge(setTroops "axe=#{axe.to_i}")
-
-		end
+		@vetAttack = @vetAttack.merge(setTroops "spear=#{spear.to_i}")
+		@vetAttack = @vetAttack.merge(setTroops "sword=#{sword.to_i}")
+		@vetAttack = @vetAttack.merge(setTroops "axe=#{axe.to_i}")
 
 	end
 
@@ -482,7 +482,6 @@ class Tribal
 
 		light = ville.getVar("light").to_i - @_light.to_i 
 		heavy = ville.getVar("heavy").to_i - @_heavy.to_i 
- 
 
 		if light + heavy > 3
 
