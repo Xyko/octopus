@@ -551,7 +551,7 @@ class Tribal
 
 			ville = getVillage("xykoBR")
 
-			@temp_vector = janelaSpy(ville,9).sort_by {|_key, value| value}
+			@temp_vector = janelaSpy(ville,6).sort_by {|_key, value| value}
 			cont = 0
 			@temp_vector.each {|key,value|
 
