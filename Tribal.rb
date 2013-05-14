@@ -144,8 +144,6 @@ class Tribal
 		return vetRet
 	end
 
-
-
 	def getVillage(villageName)
 		@player.villages.each  {|key, value|
 			if value.name.eql? villageName
@@ -154,6 +152,7 @@ class Tribal
 		}
 		return @player.villages[@player.villages.keys[rand(@player.villages.size)]]
 	end
+
 
 	def ataqueTropas(fromVillage, toVillage, vTropas, attackType)
 
@@ -200,6 +199,8 @@ class Tribal
 			# @agent.submit(formAtack4, formAtack4.button_with(:value => "Ok"))
 
 			return true
+
+
 	end
 
 	def checkHaul(ville, target, type)
