@@ -250,7 +250,7 @@ class Tribal
 	end
 
 
-	def farmAll
+	def farmAll(abandonedOnly)
 
 		@minimalFarmLimit = 300
 
@@ -273,79 +273,81 @@ class Tribal
 			ycoord = alvo[1]
 			delete = false
 
-			if !@temp_vector.key?("#{xcoord} #{ycoord}") then
+			if @pageReport.body.include?("Aldeia de b")
 
-				wood = @pageReport.parser.xpath('//table[@id="attack_spy"]').inner_text.to_s.gsub(/[a-zA-Z:çá()éí.]/,'').split[0].to_i
-				clay = @pageReport.parser.xpath('//table[@id="attack_spy"]').inner_text.to_s.gsub(/[a-zA-Z:çá()éí.]/,'').split[1].to_i
-				iron = @pageReport.parser.xpath('//table[@id="attack_spy"]').inner_text.to_s.gsub(/[a-zA-Z:çá()éí.]/,'').split[2].to_i
-				@capacity = wood + clay + iron
+				if !@temp_vector.key?("#{xcoord} #{ycoord}") then
 
-				if wood > 100 || clay > 100 || iron > 100 && wood + clay + iron > 300
-					@temp_vector["#{xcoord} #{ycoord}"] = ""
-					
-					puts "#{index}/#{links.size} Analizando #{xcoord}/#{ycoord} com #{wood+clay+iron}." 
+					wood = @pageReport.parser.xpath('//table[@id="attack_spy"]').inner_text.to_s.gsub(/[a-zA-Z:çá()éí.]/,'').split[0].to_i
+					clay = @pageReport.parser.xpath('//table[@id="attack_spy"]').inner_text.to_s.gsub(/[a-zA-Z:çá()éí.]/,'').split[1].to_i
+					iron = @pageReport.parser.xpath('//table[@id="attack_spy"]').inner_text.to_s.gsub(/[a-zA-Z:çá()éí.]/,'').split[2].to_i
+					@capacity = wood + clay + iron
 
-					target = Village.new(
-						:xcoord 	=> xcoord,
-						:ycoord 	=> ycoord,
-						:wood 		=> wood.to_i,
-						:clay 		=> clay.to_i,
-						:iron 		=> iron.to_i,
-						:delete 	=> "")
+					if wood > 100 || clay > 100 || iron > 100 && wood + clay + iron > 300
+						@temp_vector["#{xcoord} #{ycoord}"] = ""
+						
+						puts "#{index}/#{links.size} Analizando #{xcoord}/#{ycoord} com #{wood+clay+iron}." 
 
-					candidates = getOrdenedVectorNearTo(target)
+						target = Village.new(
+							:xcoord 	=> xcoord,
+							:ycoord 	=> ycoord,
+							:wood 		=> wood.to_i,
+							:clay 		=> clay.to_i,
+							:iron 		=> iron.to_i,
+							:delete 	=> "")
 
-					candidates.each {|ville_name,v|
+						candidates = getOrdenedVectorNearTo(target)
 
-						ville = getVillage(ville_name)
+						candidates.each {|ville_name,v|
 
-						if ville.farmed_cap > 300
+							ville = getVillage(ville_name)
 
-							def internalAttack (ville,target,msg)
-								if @vetAttack.size > 0
-									puts "internalAttack #{ville.farmed_cap} #{ville.farmed_cap} #{@capacity}	#{@vetAttack}"
-									@vetAttack = @vetAttack.merge(setTroops "spy=1")
-									puts "#{msg} com #{@vetAttack}. Restam: #{ville.light} #{ville.heavy} #{ville.spear} #{ville.sword} #{ville.axe}"
-									ataqueTropas(ville,target,@vetAttack,"attack")
-									if  @capacity < 300
-										delete = @pageReport.link_with(:href  => /(.*action=del_one*.)/).uri
-										pageDelete = @agent.get('http://'+@world.name+'.tribalwars.com.br'+ delete.to_s)
-										analisaBot(pageDelete)
-									end 
+							if ville.farmed_cap > 300
+
+								def internalAttack (ville,target,msg)
+									if @vetAttack.size > 0
+										puts "internalAttack #{ville.farmed_cap} #{ville.farmed_cap} #{@capacity}	#{@vetAttack}"
+										@vetAttack = @vetAttack.merge(setTroops "spy=1")
+										puts "#{msg} com #{@vetAttack}. Restam: #{ville.light} #{ville.heavy} #{ville.spear} #{ville.sword} #{ville.axe}"
+										ataqueTropas(ville,target,@vetAttack,"attack")
+										if  @capacity < 300
+											delete = @pageReport.link_with(:href  => /(.*action=del_one*.)/).uri
+											pageDelete = @agent.get('http://'+@world.name+'.tribalwars.com.br'+ delete.to_s)
+											analisaBot(pageDelete)
+										end 
+									end
 								end
+
+								msg = "#{index}/#{links.size} #{ville.name} atacando #{xcoord}/#{ycoord}" 
+
+								@vetAttack = Hash.new
+								attackWithWalkers(ville)	if @capacity > @minimalFarmLimit 
+								internalAttack(ville,target,msg) 
+
+								@vetAttack = Hash.new
+								attackWithHorses(ville)		if @capacity > @minimalFarmLimit
+								internalAttack(ville,target,msg) 
+
 							end
 
-							msg = "#{index}/#{links.size} #{ville.name} atacando #{xcoord}/#{ycoord}" 
+						}
 
-							@vetAttack = Hash.new
-							attackWithWalkers(ville)	if @capacity > @minimalFarmLimit 
-							internalAttack(ville,target,msg) 
-
-							@vetAttack = Hash.new
-							attackWithHorses(ville)		if @capacity > @minimalFarmLimit
-							internalAttack(ville,target,msg) 
-
-						end
-
-					}
-
+					else
+						delete = true
+					end
 				else
 					delete = true
 				end
-			else
-				delete = true
-			end
+			end # se a aldeia for barbara
+
 			if delete
 				puts "#{index}/#{links.size} cleanReport deleta o relatório #{xcoord} #{ycoord}" 
 				pageDelete = @agent.get('http://'+@world.name+'.tribalwars.com.br'+ link_to_delete.to_s)
 				analisaBot(pageDelete) 
 			end
 
-
 		end
 
 	end
-
 
 	def normalizeTroops(type)
 
@@ -887,7 +889,7 @@ case options.c_type
 		tw.attackSpy
 	when :farm
 		puts "farm+"
-		tw.farmAll
+		tw.farmAll(true)
 		# tw.farmAll(tw.getVillage("xykoBR"))
 		# tw.farmAll(tw.getVillage("xykoBR2"))
 		# tw.farmAll(tw.getVillage("xykoBR3"))
