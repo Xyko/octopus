@@ -44,6 +44,8 @@ class World
         ycoord  =  villa.split(",")[3]
         user_id =  villa.split(",")[4]
 
+        puts villa
+
         @vet_villages[:id => id] = {
           
           :id        =>  id,

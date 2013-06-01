@@ -550,7 +550,7 @@ class Tribal
 	def attackSpy
 		cont = 0
 
-			ville = getVillage("xykoBR")
+			ville = getVillage("xykoBRC1")
 
 			@temp_vector = janelaSpy(ville,8).sort_by {|_key, value| value}
 			cont = 0
