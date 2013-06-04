@@ -309,7 +309,7 @@ class Tribal
 										@vetAttack = @vetAttack.merge(setTroops "spy=1")
 										puts "#{msg} com #{@vetAttack}. Restam: #{ville.light} #{ville.heavy} #{ville.spear} #{ville.sword} #{ville.axe}"
 										ataqueTropas(ville,target,@vetAttack,"attack")
-										if  @capacity < 300
+										if  @capacity < 2000
 											delete = @pageReport.link_with(:href  => /(.*action=del_one*.)/).uri
 											pageDelete = @agent.get('http://'+@world.name+'.tribalwars.com.br'+ delete.to_s)
 											analisaBot(pageDelete)
