@@ -156,7 +156,6 @@ class Tribal
 
 	def ataqueTropas(fromVillage, toVillage, vTropas, attackType)
 
-
 			pagePraca  = @agent.get('http://' + @world.name + '.tribalwars.com.br/game.php?village='+fromVillage.id.to_s+'&screen=place')
 			analisaBot(pagePraca)
 			formPraca  = pagePraca.forms.first
@@ -177,29 +176,13 @@ class Tribal
 
 			pageAtack = @agent.submit(formPraca, formPraca.button_with(:name => attackType))
 
-			# pageAtack1 = @agent.submit(formPraca, formPraca.button_with(:name => "attack"))
-			# pageAtack2 = @agent.submit(formPraca, formPraca.button_with(:name => "attack"))
-			# pageAtack3 = @agent.submit(formPraca, formPraca.button_with(:name => "attack"))
-			# pageAtack4 = @agent.submit(formPraca, formPraca.button_with(:name => "attack"))
-
 			analisaBot(pageAtack)
 
 			formAtack  = pageAtack.forms.first
-			
-			# formAtack1  = pageAtack1.forms.first
-			# formAtack2  = pageAtack2.forms.first
-			# formAtack3  = pageAtack3.forms.first
-			# formAtack4  = pageAtack4.forms.first
 
 			@agent.submit(formAtack, formAtack.button_with(:value => "Ok"))
 
-			# @agent.submit(formAtack1, formAtack1.button_with(:value => "Ok"))
-			# @agent.submit(formAtack2, formAtack2.button_with(:value => "Ok"))
-			# @agent.submit(formAtack3, formAtack3.button_with(:value => "Ok"))
-			# @agent.submit(formAtack4, formAtack4.button_with(:value => "Ok"))
-
 			return true
-
 
 	end
 
@@ -252,7 +235,7 @@ class Tribal
 
 	def farmAll(abandonedOnly)
 
-		@minimalFarmLimit = 300
+		@minimalFarmLimit = 1000
 
 		@temp_vector = Hash.new
 
@@ -301,7 +284,7 @@ class Tribal
 
 							ville = getVillage(ville_name)
 
-							if ville.farmed_cap > 300
+							if ville.farmed_cap > 1000
 
 								def internalAttack (ville,target,msg)
 									if @vetAttack.size > 0
@@ -309,7 +292,7 @@ class Tribal
 										@vetAttack = @vetAttack.merge(setTroops "spy=1")
 										puts "#{msg} com #{@vetAttack}. Restam: #{ville.light} #{ville.heavy} #{ville.spear} #{ville.sword} #{ville.axe}"
 										ataqueTropas(ville,target,@vetAttack,"attack")
-										if  @capacity < 2000
+										if  @capacity < @minimalFarmLimit 
 											delete = @pageReport.link_with(:href  => /(.*action=del_one*.)/).uri
 											pageDelete = @agent.get('http://'+@world.name+'.tribalwars.com.br'+ delete.to_s)
 											analisaBot(pageDelete)
@@ -552,7 +535,7 @@ class Tribal
 	def attackSpy
 		cont = 0
 
-			ville = getVillage("xykoBRC1")
+			ville = getVillage("xykoBRP1")
 
 			@temp_vector = janelaSpy(ville,8).sort_by {|_key, value| value}
 			cont = 0
@@ -789,10 +772,53 @@ exit(0)
 		end
 	end
 
-	def teste
-		getOrdenedVectorNearTo(615,327).each {|k,v|
-			puts getVillage(k)
+
+	def sendSnobtoKill
+		
+		prng = Random.new(Time.now.to_i)
+		@player.villages.each  {|key, ville|
+
+			if ville.getVar("snob").to_i > 0
+				puts "Enviando #{ville.getVar("snob")} nobres from #{ville.name} to death."
+				coord = janelaSpy(ville,3).sort_by.next[0]
+				@vetAttack = Hash.new
+				@vetAttack = @vetAttack.merge(setTroops "snob=#{ville.getVar("snob").to_i}")
+				target = Village.new(
+					:xcoord 	=> coord.split(" ")[0],
+					:ycoord 	=> coord.split(" ")[1],)
+				ataqueTropas(ville,target,@vetAttack,"attack")
+
+				sleep_time = prng.rand(10)
+				puts "#{Time.at(0)} Sleeping #{sleep_time} seconds"
+				sleep(sleep_time)
+
+			end
+
 		}
+	end
+
+	def snobCreate
+		
+		prng = Random.new(Time.now.to_i)
+		@player.villages.each  {|key, ville|
+
+			@pageAcademy = @agent.get('http://'+@world.name+'.tribalwars.com.br/game.php?village='+ville.id.to_s+'&screen=snob')
+			analisaBot(@pageAcademy)
+			if @pageAcademy.body.to_s.index("Formar unidade").to_i > 0
+
+				aux = @pageAcademy.link_with(:href => /.*action=train&h=*./).click
+				sleep_time = prng.rand(10)
+				puts "#{Time.at(0)} Sleeping #{sleep_time} seconds"
+				sleep(sleep_time)
+
+			end
+
+		}
+
+	end
+
+	def teste
+		puts "Teste"
 	end
 
 	def loadVar
@@ -838,7 +864,7 @@ options.transfer_type = :auto
 options.verbose = false
 opts = OptionParser.new do |opts|
 
-	opts.banner = "Usage: tribal.rb -c [spy|check|farm|fake|ally|targets|incoming|getsum] [options]"
+	opts.banner = "Usage: tribal.rb -w world -c [spy|check|farm|fake|ally|targets|incoming|screate|skill] [options]"
 	opts.separator ""
 	opts.separator "Specific options:"
 	# Optional argument with keyword completion.
@@ -846,13 +872,12 @@ opts = OptionParser.new do |opts|
 	opts.on("-n","--name NAME") do |n|	
 		options.ally_name = n 
 	end
-
-	opts.on("-c","--c [COMMAND]", [:spy, :check, :farm, :fake, :ally, :targets, :teste, :incoming, :clean],
-		"Select command type (spy, check, farm, fake, ally, targets, incoming, clean)") do |c|
+	opts.on("-w","--world [WORLD]") do |n|	
+		options.world_name = n 
+	end
+	opts.on("-c","--c [COMMAND]", [:spy, :check, :farm, :fake, :ally, :targets, :teste, :incoming, :clean, :skill, :screate],
+		"Select command type (spy, check, farm, fake, ally, targets, incoming, clean, screate, skill)") do |c|
 		options.c_type = c
-		opts.on("-n","--name NAME") do |n|	
-			options.ally_name = n 
-		end
 	end
 
 	opts.on_tail("-h", "--help", "Show this message") do
@@ -862,21 +887,21 @@ opts = OptionParser.new do |opts|
 end
 opts.parse!(ARGV)
 
-user = File.open(File.expand_path(File.dirname(__FILE__) ).to_s + '/info/users')
-user.each do |line|
-	@p1   = line.split(':')[0]
-	@p2   = line.split(':')[1]
-	@p3   = line.split(':')[2]
-	@p4   = line.split(':')[3]
+def errorMsg
+	puts "os parametros world e command são obrigatórios.xxx"
+	exec("cd #{File.expand_path(File.dirname(__FILE__) ).to_s};ruby Tribal.rb -h")
+	puts "os parametros world e command são obrigatórios."
+	exit(0)
 end
+
+errorMsg if options.world_name.nil?
+errorMsg if options.c_type.nil?
 
 name   = "xykoBR"
 passwd = "barbara"
-world  = "br48"
+world  = options.world_name
+
 tw = Tribal.new(:name => name,:passwd => passwd,:world => world)
-
-
-#tw = Tribal.new(:name => @p1,:passwd => @p2,:world => @p3,:master => @p4)
 
 tw.connect
 puts "Connected: #{tw.logged?}"
@@ -890,13 +915,6 @@ case options.c_type
 	when :farm
 		puts "farm+"
 		tw.farmAll(true)
-		# tw.farmAll(tw.getVillage("xykoBR"))
-		# tw.farmAll(tw.getVillage("xykoBR2"))
-		# tw.farmAll(tw.getVillage("xykoBR3"))
-		# tw.farmAll(tw.getVillage("xykoBR4"))
-		# tw.farmAll(tw.getVillage("xykoBR5"))
-		# tw.farmAll(tw.getVillage("xykoBR6"))
-		# tw.farmAll(tw.getVillage("xykoBR7"))
 	when :fake
 		puts "fake+"
 		tw.fake("")
@@ -912,6 +930,12 @@ case options.c_type
 	when :clean
 		puts "Executando clean..."
 		tw.cleanReports
+	when :skill
+		puts "Executando skill..."
+		tw.sendSnobtoKill
+	when :screate
+		puts "Executando screate..."
+		tw.snobCreate
 	when :teste
 		puts "Executando teste..."
 		tw.teste	
