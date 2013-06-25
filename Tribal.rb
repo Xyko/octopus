@@ -146,6 +146,7 @@ class Tribal
 
 	def getVillage(villageName)
 		@player.villages.each  {|key, value|
+			puts "#{villageName} #{value.name}"
 			if value.name.eql? villageName
 				return value
 			end
@@ -963,7 +964,7 @@ opts = OptionParser.new do |opts|
 	# Optional argument with keyword completion.
 
 	opts.on("-v","--village [VILLAGE]") do |n|	
-		options.ally_name = n 
+		options.village = n 
 	end
 	opts.on("-w","--world [WORLD]") do |n|	
 		options.world_name = n 
