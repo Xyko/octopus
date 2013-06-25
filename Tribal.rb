@@ -532,10 +532,10 @@ class Tribal
 
 	end
 
-	def attackSpy
+	def attackSpy(village)
 		cont = 0
 
-			ville = getVillage("xykoBRP1")
+			ville = getVillage(village)
 
 			@temp_vector = janelaSpy(ville,8).sort_by {|_key, value| value}
 			cont = 0
@@ -817,8 +817,101 @@ exit(0)
 
 	end
 
+
+	def testex
+
+			@pagePrincipalBuild = @agent.get('http://br48.tribalwars.com.br/game.php?village=44500&screen=main')
+			form     = @pagePrincipalBuild.forms.first
+			#form.fields.each { |f| puts f.name + "=" + f.value}
+			form.field_with(:name => "name").value   = "TESTE"
+			@pagePrincipalBuild = @agent.submit(form)
+			analisaBot(@pagePrincipalBuild)
+			#puts @pagePrincipalBuild.body.encode("ASCII-8BIT").index("Edifício pincipal")
+
+	end
+
+
 	def teste
-		puts "Teste"
+
+		#2106201384885276
+
+		cont = 0
+		x = 0
+		y = 0
+
+		def polar(x,y)
+		  theta = Math.atan2(y,x)   # Compute the angle
+		  r = Math.hypot(x,y)       # Compute the distance
+		  [ r, theta]                # The last expression is the return value
+		end
+
+		def windRose(xi,yi,xf,yf)
+
+			r, theta = polar(xf - xi, yf - yi)
+			theta = theta * 180/Math::PI
+			theta += 360 if theta < 0 
+
+			case theta
+				when   0..30 	
+					["E",r.to_i]
+				when  30..60 	
+					["SE",r.to_i]
+				when  60..90 	
+					["S",r.to_i]
+				when  90..120 	
+					["S",r.to_i]
+				when 120..150 	
+					["SW",r.to_i]
+				when 150..180	
+					["W",r.to_i]
+				when 180..210	
+					["W",r.to_i]
+				when 210..240	
+					["NW",r.to_i]
+				when 240..270 	
+					["N",r.to_i]
+				when 270..300	
+					["N",r.to_i]
+				when 300..330 	
+					["NE",r.to_i]
+				when 300..360	
+					["E",r.to_i]		
+			end
+
+		end 
+
+		@player.villages.each  {|key, ville|
+
+			x += ville.xcoord.to_i
+			y += ville.ycoord.to_i
+			cont += 1
+
+		}
+
+		mediax = x/cont
+		mediay = y/cont
+
+		puts "#{mediax} #{mediay}"
+
+		prng = Random.new(Time.now.to_i)
+
+		cont = 0
+
+		@player.villages.each  {|key, ville|
+
+			roseDirection, distance = windRose(mediax,mediay,ville.xcoord, ville.ycoord)
+			@pagePrincipalBuild = @agent.get('http://'+@world.name+'.tribalwars.com.br/game.php?village='+ville.id.to_s+'&screen=main')
+			form     = @pagePrincipalBuild.forms.first
+			zero = ""
+			zero = "0" if distance < 10
+			puts " #{@pagePrincipalBuild.body.index("principal")} #{ville.name} #{ville.id.to_s}=> #{roseDirection}#{zero}#{distance}"
+			form.field_with(:name => "name").value   = "#{roseDirection}#{zero}#{distance}"
+			@pagePrincipalBuild = @agent.submit(form)
+			analisaBot(@pagePrincipalBuild)
+			# cont += 1
+			# exit(0) if cont == 2
+		}
+
 	end
 
 	def loadVar
@@ -869,7 +962,7 @@ opts = OptionParser.new do |opts|
 	opts.separator "Specific options:"
 	# Optional argument with keyword completion.
 
-	opts.on("-n","--name NAME") do |n|	
+	opts.on("-v","--village [VILLAGE]") do |n|	
 		options.ally_name = n 
 	end
 	opts.on("-w","--world [WORLD]") do |n|	
@@ -911,7 +1004,7 @@ tw.atualiza_tropas
 case options.c_type
 	when :spy
 		puts "spy+"
-		tw.attackSpy
+		tw.attackSpy(options.village)
 	when :farm
 		puts "farm+"
 		tw.farmAll(true)
