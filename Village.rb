@@ -6,8 +6,10 @@ class Village
 	attr_accessor  :id, :name, :xcoord, :ycoord, :user_id, :spear, :sword, :axe, 
 	:spy, :light,  :heavy, :ram, :catapult, :knight, :snob, :wood, :clay, :iron, :delete,
 	:spear_cap, :sword_cap, :axe_cap, :light_cap,  :heavy_cap, :farmed_cap, 
-	:distance, :h_capacity, :resources, :continent, :master
-	# descontinuados :archer, :marcher,
+	:distance, :h_capacity, :resources, :continent, :master,
+	:spear_vel, :sword_vel, :axe_vel, :spy_vel, :light_vel,  :heavy_vel, :ram_vel, 
+	:catapult_vel, :knight_vel, :snob_vel,
+	:archer, :marcher, :archer_cap, :marcher_cap, :archer_vel, :marcher_vel
 
 	def initialize(options = {})
 		self.h_capacity = 1
@@ -28,6 +30,20 @@ class Village
 		self.axe_cap   	= 10 * h_capacity.to_i
 		self.light_cap 	= 80 * h_capacity.to_i
 		self.heavy_cap 	= 50 * h_capacity.to_i
+		self.marcher_cap= 50 * h_capacity.to_i
+		self.archer_cap = 10 * h_capacity.to_i
+		self.spear_vel	=	18 
+		self.sword_vel	=	22 
+		self.axe_vel	=	18 
+		self.spy_vel	=	 9 
+		self.light_vel	=	10  
+		self.heavy_vel	=	11 
+		self.ram_vel	=	30 
+		self.catapult_vel=	30 
+		self.knight_vel	=	10 
+		self.snob_vel	=	35
+		self.marcher_vel=	10
+		self.archer		=	18
 		self.spear 		= 0
 		self.sword		= 0
 		self.axe   		= 0

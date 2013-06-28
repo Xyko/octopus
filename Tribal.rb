@@ -146,7 +146,6 @@ class Tribal
 
 	def getVillage(villageName)
 		@player.villages.each  {|key, value|
-			puts "#{villageName} #{value.name}"
 			if value.name.eql? villageName
 				return value
 			end
@@ -819,67 +818,53 @@ exit(0)
 	end
 
 
-	def testex
-
-			@pagePrincipalBuild = @agent.get('http://br48.tribalwars.com.br/game.php?village=44500&screen=main')
-			form     = @pagePrincipalBuild.forms.first
-			#form.fields.each { |f| puts f.name + "=" + f.value}
-			form.field_with(:name => "name").value   = "TESTE"
-			@pagePrincipalBuild = @agent.submit(form)
-			analisaBot(@pagePrincipalBuild)
-			#puts @pagePrincipalBuild.body.encode("ASCII-8BIT").index("Edifício pincipal")
-
+	def polar(x,y)
+	  theta = Math.atan2(y,x)   # Compute the angle
+	  r = Math.hypot(x,y)       # Compute the distance
+	  [ r, theta]                # The last expression is the return value
 	end
 
+	def windRose(xi,yi,xf,yf)
 
-	def teste
+		r, theta = polar(xf - xi, yf - yi)
+		theta = theta * 180/Math::PI
+		theta += 360 if theta < 0 
 
-		#2106201384885276
+		case theta
+			when   0..30 	
+				["E",format("%.1f", r), theta.to_i]
+			when  30..60 	
+				["SE",format("%.1f", r), theta.to_i]
+			when  60..90 	
+				["S",format("%.1f", r), theta.to_i]
+			when  90..120 	
+				["S",format("%.1f", r), theta.to_i]
+			when 120..150 	
+				["SW",format("%.1f", r), theta.to_i]
+			when 150..180	
+				["W",format("%.1f", r), theta.to_i]
+			when 180..210	
+				["W",format("%.1f", r), theta.to_i]
+			when 210..240	
+				["NW",format("%.1f", r), theta.to_i]
+			when 240..270 	
+				["N",format("%.1f", r), theta.to_i]
+			when 270..300	
+				["N",format("%.1f", r), theta.to_i]
+			when 300..330 	
+				["NE",format("%.1f", r), theta.to_i]
+			when 300..360	
+				["E",format("%.1f", r), theta.to_i]		
+		end
+
+	end 
+
+
+	def rename
 
 		cont = 0
 		x = 0
 		y = 0
-
-		def polar(x,y)
-		  theta = Math.atan2(y,x)   # Compute the angle
-		  r = Math.hypot(x,y)       # Compute the distance
-		  [ r, theta]                # The last expression is the return value
-		end
-
-		def windRose(xi,yi,xf,yf)
-
-			r, theta = polar(xf - xi, yf - yi)
-			theta = theta * 180/Math::PI
-			theta += 360 if theta < 0 
-
-			case theta
-				when   0..30 	
-					["E",r.to_i]
-				when  30..60 	
-					["SE",r.to_i]
-				when  60..90 	
-					["S",r.to_i]
-				when  90..120 	
-					["S",r.to_i]
-				when 120..150 	
-					["SW",r.to_i]
-				when 150..180	
-					["W",r.to_i]
-				when 180..210	
-					["W",r.to_i]
-				when 210..240	
-					["NW",r.to_i]
-				when 240..270 	
-					["N",r.to_i]
-				when 270..300	
-					["N",r.to_i]
-				when 300..330 	
-					["NE",r.to_i]
-				when 300..360	
-					["E",r.to_i]		
-			end
-
-		end 
 
 		@player.villages.each  {|key, ville|
 
@@ -900,19 +885,113 @@ exit(0)
 
 		@player.villages.each  {|key, ville|
 
-			roseDirection, distance = windRose(mediax,mediay,ville.xcoord, ville.ycoord)
+			roseDirection, distance, theta = windRose(mediax,mediay,ville.xcoord, ville.ycoord)
 			@pagePrincipalBuild = @agent.get('http://'+@world.name+'.tribalwars.com.br/game.php?village='+ville.id.to_s+'&screen=main')
 			form     = @pagePrincipalBuild.forms.first
-			zero = ""
-			zero = "0" if distance < 10
-			puts " #{@pagePrincipalBuild.body.index("principal")} #{ville.name} #{ville.id.to_s}=> #{roseDirection}#{zero}#{distance}"
-			form.field_with(:name => "name").value   = "#{roseDirection}#{zero}#{distance}"
+
+			puts " #{@pagePrincipalBuild.body.index("principal")} #{ville.name} #{ville.id.to_s}=> #{roseDirection}-#{theta}-#{distance}"
+			form.field_with(:name => "name").value   = "#{roseDirection}-#{theta}-#{distance}"
 			@pagePrincipalBuild = @agent.submit(form)
 			analisaBot(@pagePrincipalBuild)
 			# cont += 1
 			# exit(0) if cont == 2
 		}
 
+	end
+
+	def plan(target)
+
+		vector = Hash.new
+		@player.villages.each {|keyv, ville|
+			xi = ville.xcoord.to_i
+			yi = ville.ycoord.to_i
+			@world.get_villages.each {|key, value|
+				if value[:name].eql? target
+					xf = value[:xcoord].to_i
+					yf = value[:ycoord].to_i
+					r, theta = polar(xf - xi, yf - yi)
+					vector[ville.name] = r
+				end 
+			}
+		}
+
+		(vector.sort_by {|name,dist| dist}).each {|k,v|
+			t  = Time.now
+			cv =  t + 11 * v * 60
+			w  =  t + 22 * v * 60
+			s  =  t + 35 * v * 60
+			d  = format("%.1f", v)
+			ville = getVillage(k)
+			puts format("%20s %8s %8s %8s %5s %5s %5s %5s\n", 
+				k,
+				"#{cv.hour}:#{cv.min}:#{cv.sec}",
+				"#{ w.hour}:#{ w.min}:#{ w.sec}",
+				"#{ s.hour}:#{ s.min}:#{ s.sec}",	
+				ville.axe.to_s,
+				ville.heavy.to_s,
+				ville.snob.to_s,							 
+				d) 
+
+		}
+
+	end 
+
+
+	def planAttack(target,time)
+		time_hour 	= time.split(":")[0]
+		time_min	= time.split(":")[1]
+
+		vector = Hash.new
+		@player.villages.each {|keyv, ville|
+			xi = ville.xcoord.to_i
+			yi = ville.ycoord.to_i
+			@world.get_villages.each {|key, value|
+				if value[:name].eql? target
+					xf = value[:xcoord].to_i
+					yf = value[:ycoord].to_i
+					r, theta = polar(xf - xi, yf - yi)
+					vector[ville.name] = r
+				end 
+			}
+		}
+
+		dia 	= time.split("-")[0].split("/")[0]
+		mes 	= time.split("-")[0].split("/")[1]
+		ano 	= time.split("-")[0].split("/")[2]
+		hora 	= time.split("-")[1].split(":")[0]
+		min  	= time.split("-")[1].split(":")[1]
+		ville 	= getVillage(target)
+		t 		= Time.new(ano,mes,dia,hora,min)
+
+		def fTime(time)
+			return "#{time.asctime.split(' ')[3]}"
+		end
+
+		#printf("01234567890123456789 12345 12345678 12345678 12345678 12345678 12345678 12345678 12345678\n")
+		 printf("Aldeia               Dist. Spys     Light    Heavy    Spear    Sword    Ram      Snob\n")
+
+		(vector.sort_by {|name,dist| dist}).each {|k,d|
+
+			tspy   = t - ville.spy_vel		* 60 * d
+			tlight = t - ville.light_vel	* 60 * d
+			theavy = t - ville.heavy_vel	* 60 * d
+			tspear = t - ville.spear_vel	* 60 * d
+			tsword = t - ville.sword_vel	* 60 * d
+			tram   = t - ville.ram_vel		* 60 * d
+			tsnob  = t - ville.snob_vel		* 60 * d
+
+		 	printf("%-20s %5.1f %7s %7s %7s %7s %7s %7s %7s\n",k,d,fTime(tspy),fTime(tlight),fTime(theavy),fTime(tspear),fTime(tsword),fTime(tram),fTime(tsnob))
+
+
+		}
+
+	end
+
+
+
+
+	def teste
+		puts "teste"
 	end
 
 	def loadVar
@@ -958,19 +1037,25 @@ options.transfer_type = :auto
 options.verbose = false
 opts = OptionParser.new do |opts|
 
-	opts.banner = "Usage: tribal.rb -w world -c [spy|check|farm|fake|ally|targets|incoming|screate|skill] [options]"
+	opts.banner = "Usage: tribal.rb -w world -c [spy|check|farm|fake|ally|targets|incoming|screate|skill|rename|plan|planattack] [options]"
 	opts.separator ""
 	opts.separator "Specific options:"
 	# Optional argument with keyword completion.
 
+	opts.on("-l","--list [LIST]") do |n|	
+		options.list = n 
+	end
+	opts.on("-t","--time [TIME]") do |n|	
+		options.time = n 
+	end
 	opts.on("-v","--village [VILLAGE]") do |n|	
-		options.village = n 
+		options.village_name = n 
 	end
 	opts.on("-w","--world [WORLD]") do |n|	
 		options.world_name = n 
 	end
-	opts.on("-c","--c [COMMAND]", [:spy, :check, :farm, :fake, :ally, :targets, :teste, :incoming, :clean, :skill, :screate],
-		"Select command type (spy, check, farm, fake, ally, targets, incoming, clean, screate, skill)") do |c|
+	opts.on("-c","--c [COMMAND]", [:spy, :check, :farm, :fake, :ally, :targets, :teste, :incoming, :clean, :skill, :screate, :rename, :plan, :planattack],
+		"Select command type (spy, check, farm, fake, ally, targets, incoming, clean, screate, skill, rename, plan, planattack)") do |c|
 		options.c_type = c
 	end
 
@@ -978,6 +1063,7 @@ opts = OptionParser.new do |opts|
 		puts opts
 		exit(0)
 	end
+
 end
 opts.parse!(ARGV)
 
@@ -1005,7 +1091,7 @@ tw.atualiza_tropas
 case options.c_type
 	when :spy
 		puts "spy+"
-		tw.attackSpy(options.village)
+		tw.attackSpy(options.village_name)
 	when :farm
 		puts "farm+"
 		tw.farmAll(true)
@@ -1030,9 +1116,18 @@ case options.c_type
 	when :screate
 		puts "Executando screate..."
 		tw.snobCreate
+	when :rename
+		puts "Executando rename..."
+		tw.rename	
+	when :plan
+		puts "Executando plan..."
+		tw.plan(options.village_name)	
+	when :planattack
+		puts "Executando planAttack..."
+		tw.planAttack(options.village_name,options.time)	
 	when :teste
 		puts "Executando teste..."
-		tw.teste	
+		tw.teste
 	else
 		puts "Vazia..."
 end
