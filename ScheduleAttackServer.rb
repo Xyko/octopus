@@ -83,8 +83,10 @@ loop {
 
 					villageFrom = tw.getVillageCoord(msg[1])
 					villageTo   = tw.getVillageCoord(msg[2])
-
 					tw.ataqueTropas(villageFrom,villageTo,@vetAttack,"attack")
+
+					log.info("End of schedule attack.")
+
 
 				end
 

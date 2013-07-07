@@ -13,8 +13,6 @@ include HighLine::SystemExtensions
 
 load "Tribal.rb"
 
-
-
 options = OpenStruct.new
 options.library = []
 options.inplace = false
@@ -127,8 +125,8 @@ case options.c_type
 		tw.cronattack(options.village_name,options.time,options.list)
 	when :teste
 		puts "Executando teste..."
-		tw.teste("622|337,624|333","spy=10"				,"2013-07-05 13:20:00")
-		tw.teste("623|327,624|333","archer=10 heavy=8"	,"2013-07-05 14:20:00")
+		tw.teste("622|337,624|333","spy=10"				,"2013-07-07 07:38:00")
+		tw.teste("623|327,624|333","archer=10 heavy=8"	,"2013-07-07 07:40:00")
 	else
 		puts "Vazia..."
 end
