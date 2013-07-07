@@ -55,6 +55,7 @@ class World
           
         }
 
+        #puts name if name.index("UrsinhodaAlyne") != nil
 
       end
       
@@ -130,8 +131,7 @@ class World
 
   def get_tranlated_name(name)
 
-      return  name.gsub(/%3D/,'=').gsub(/%C3%A1/,'á').gsub(/%C3%A9/,'é').gsub(/%2A/,'*').gsub(/%3F/,'?').gsub(/%2B/,'+').gsub(/%7C/,'|')
- 
+      return  name.gsub(/%3D/,'=').gsub(/%C3%A1/,'á').gsub(/%C3%A9/,'é').gsub(/%2A/,'*').gsub(/%3F/,'?').gsub(/%2B/,'+').gsub(/%7C/,'|').gsub(/%5B/,'[').gsub(/%5D/,']')
   end
   
 end

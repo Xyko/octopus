@@ -17,7 +17,7 @@ while tst
 	time1.min.to_s,
 	time2.hour.to_s,
 	time2.min.to_s)
-	system("ruby Tribal.rb -c farm -w br48")
+	system("ruby TribalCommands.rb -c farm -w br48")
 	log.info("sleeping....")
 	if $?.exitstatus != 0
 		log.fatal("saida inexperada....")

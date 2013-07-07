@@ -9,6 +9,8 @@ require 'ostruct'
 require 'rufus/scheduler'
 require "highline/system_extensions"
 include HighLine::SystemExtensions
+require 'socket'
+require 'time_diff'
 load 'Player.rb'
 load 'World.rb'
 load 'Village.rb'
@@ -106,7 +108,7 @@ class Tribal
 	end
 
 
-	def atualiza_tropas
+	def atualiza_tropas(archers)
 		@player.villages.each  {|key, value|
 			pagePlace = @agent.get('http://'+@world.name+'.tribalwars.com.br/game.php?village='+value.id.to_s+'&screen=place')
 			analisaBot(pagePlace)
@@ -120,6 +122,10 @@ class Tribal
 			value.catapult =  pagePlace.link_with(:href => /#unit_input_catapult/).text.sub('(','').sub(')','')
 			value.knight   =  pagePlace.link_with(:href => /#unit_input_knight/).text.sub('(','').sub(')','')
 			value.snob     =  pagePlace.link_with(:href => /#unit_input_snob/).text.sub('(','').sub(')','')
+
+			value.archer   =  pagePlace.link_with(:href => /#unit_input_archer/).text.sub('(','').sub(')','') if archers
+			value.marcher  =  pagePlace.link_with(:href => /#unit_input_marcher/).text.sub('(','').sub(')','') if archers
+
 		}
 	end
 
@@ -151,6 +157,20 @@ class Tribal
 			end
 		}
 		return @player.villages[@player.villages.keys[rand(@player.villages.size)]]
+	end
+
+
+	def getVillageCoord(target)
+		@world.get_villages.each {|key, value|
+			if (value[:xcoord].eql? target.split("|")[0]) && (value[:ycoord].eql? target.split("|")[1])
+				return Village.new(
+					:name 	 => value[:name],
+					:id 	 => value[:id],
+					:xcoord  => value[:xcoord],
+					:ycoord  => value[:ycoord],
+					:user_id => value[:user_id])
+			end 
+		}
 	end
 
 
@@ -906,7 +926,7 @@ exit(0)
 			xi = ville.xcoord.to_i
 			yi = ville.ycoord.to_i
 			@world.get_villages.each {|key, value|
-				if value[:name].eql? target
+				if (value[:xcoord].eql? target.split("|")[0]) && (value[:ycoord].eql? target.split("|")[1])
 					xf = value[:xcoord].to_i
 					yf = value[:ycoord].to_i
 					r, theta = polar(xf - xi, yf - yi)
@@ -914,6 +934,8 @@ exit(0)
 				end 
 			}
 		}
+
+		puts vector.inspect
 
 		(vector.sort_by {|name,dist| dist}).each {|k,v|
 			t  = Time.now
@@ -938,6 +960,8 @@ exit(0)
 
 
 	def planAttack(target,time)
+
+
 		time_hour 	= time.split(":")[0]
 		time_min	= time.split(":")[1]
 
@@ -946,7 +970,7 @@ exit(0)
 			xi = ville.xcoord.to_i
 			yi = ville.ycoord.to_i
 			@world.get_villages.each {|key, value|
-				if value[:name].eql? target
+				if (value[:xcoord].eql? target.split("|")[0]) && (value[:ycoord].eql? target.split("|")[1])
 					xf = value[:xcoord].to_i
 					yf = value[:ycoord].to_i
 					r, theta = polar(xf - xi, yf - yi)
@@ -972,6 +996,8 @@ exit(0)
 
 		(vector.sort_by {|name,dist| dist}).each {|k,d|
 
+		 	myVille 	= getVillage(k)
+
 			tspy   = t - ville.spy_vel		* 60 * d
 			tlight = t - ville.light_vel	* 60 * d
 			theavy = t - ville.heavy_vel	* 60 * d
@@ -980,19 +1006,148 @@ exit(0)
 			tram   = t - ville.ram_vel		* 60 * d
 			tsnob  = t - ville.snob_vel		* 60 * d
 
-		 	printf("%-20s %5.1f %7s %7s %7s %7s %7s %7s %7s\n",k,d,fTime(tspy),fTime(tlight),fTime(theavy),fTime(tspear),fTime(tsword),fTime(tram),fTime(tsnob))
 
+			#if yield 
+			 	#printf("%-20s %5.1f %7s %7s %7s %7s %7s %7s %7s %7s %7s %5s\n",k,d,fTime(tspy),fTime(tlight),fTime(theavy),fTime(tspear),fTime(tsword),fTime(tram),fTime(tsnob),myVille.defense_cap, myVille.attack_cap,myVille.spy)
+
+				printf("%-20s %5.1f %7s %7s %7s\n",k,d,
+					fTime(tspy),fTime(tlight),fTime(theavy))
+
+
+
+			 	printf("%-20s %5s %5s %5s %5s\n",
+			 		k,
+					myVille.spy 	,
+					myVille.light 	,
+					myVille.marcher ,
+					myVille.heavy 	,
+					)
+			 	# printf("%-20s %5s %5s %5s %5s %5s %5s %5s %5s %5s %5s %9s %9s\n",
+			 	# 	k,
+					# myVille.spear 	,
+					# myVille.sword	,
+					# myVille.axe   	,
+					# myVille.archer 	,
+					# myVille.spy 	,
+					# myVille.light 	,
+					# myVille.marcher ,
+					# myVille.heavy 	,
+					# myVille.ram 	,
+					# myVille.catapult,
+					# myVille.knight 	,
+					# myVille.snob )
+		 	#end
 
 		}
 
 	end
 
 
+	def cronattack(target,time,vectorAttack)
 
+		vector = Hash.new
+		@player.villages.each {|keyv, ville|
+			xi = ville.xcoord.to_i
+			yi = ville.ycoord.to_i
+			@world.get_villages.each {|key, value|
+				if (value[:xcoord].eql? target.split("|")[0]) && (value[:ycoord].eql? target.split("|")[1])
+					xf = value[:xcoord].to_i
+					yf = value[:ycoord].to_i
+					r, theta = polar(xf - xi, yf - yi)
+					vector[ville.name] = r
+				end 
+			}
+		}
 
-	def teste
-		puts "teste"
+		cabec = "Aldeia               Dist. "
+		cabec += "spy    " if !vectorAttack.index("spy").nil?
+		cabec += "light  " if !vectorAttack.index("light").nil?
+		cabec += "heavy  " if !vectorAttack.index("heavy").nil?
+		cabec += "marcher" if !vectorAttack.index("marcher").nil?
+		cabec += "spear  " if !vectorAttack.index("spear").nil?
+		cabec += "sword  " if !vectorAttack.index("sword").nil?
+		cabec += "axe    " if !vectorAttack.index("axe").nil?
+		cabec += "archer " if !vectorAttack.index("archer").nil?
+		cabec += "ram    " if !vectorAttack.index("ram").nil?
+		cabec += "catapul" if !vectorAttack.index("catapul").nil?
+		cabec += "knight " if !vectorAttack.index("knight").nil?
+		cabec += "snob   " if !vectorAttack.index("snob").nil?
+
+		puts cabec
+
+		(vector.sort_by {|name,dist| dist}).each {|k,d|
+
+		 	myVille 	= getVillage(k)
+
+			tspy   		= Time.parse(time) - myVille.spy_vel		* 60 * d
+			tlight 		= Time.parse(time) - myVille.light_vel		* 60 * d
+			theavy 		= Time.parse(time) - myVille.heavy_vel		* 60 * d
+			tmarcher 	= Time.parse(time) - myVille.marcher_vel	* 60 * d
+			tspear 		= Time.parse(time) - myVille.spear_vel		* 60 * d
+			tsword 		= Time.parse(time) - myVille.sword_vel		* 60 * d
+			tarcher 	= Time.parse(time) - myVille.archer_vel		* 60 * d
+			taxe 		= Time.parse(time) - myVille.axe_vel		* 60 * d
+			tram   		= Time.parse(time) - myVille.ram_vel		* 60 * d
+			tcatapult   = Time.parse(time) - myVille.catapult_vel	* 60 * d
+			tsnob  		= Time.parse(time) - myVille.snob_vel		* 60 * d
+			tknight 	= Time.parse(time) - myVille.knight_vel		* 60 * d
+
+			vetCabec =  sprintf("%20s %4.1f ",k,d)
+			vetCabec += sprintf(" %20s %5s ",tspy,myVille.spy) 			if !vectorAttack.index("spy").nil?
+			vetCabec += sprintf(" %20s %5s ",tlight,myVille.light) 		if !vectorAttack.index("light").nil?
+			vetCabec += sprintf(" %20s %5s ",theavy,myVille.heavy) 		if !vectorAttack.index("heavy").nil?
+			vetCabec += sprintf(" %20s %5s ",tmarcher,myVille.marcher) 	if !vectorAttack.index("marcher").nil?
+			vetCabec += sprintf(" %20s %5s ",tspear,myVille.spear) 		if !vectorAttack.index("spear").nil?
+			vetCabec += sprintf(" %20s %5s ",tsword,myVille.sword) 		if !vectorAttack.index("sword").nil?
+			vetCabec += sprintf(" %20s %5s ",tarcher,myVille.archer) 	if !vectorAttack.index("archer").nil?
+			vetCabec += sprintf(" %20s %5s ",taxe,myVille.axe) 			if !vectorAttack.index("axe").nil?
+			vetCabec += sprintf(" %20s %5s ",tram,myVille.ram) 			if !vectorAttack.index("ram").nil?
+			vetCabec += sprintf(" %20s %5s ",tcatapult,myVille.catapult) if !vectorAttack.index("catapult").nil?
+			vetCabec += sprintf(" %20s %5s ",tsnob,myVille.snob) 		if !vectorAttack.index("snob").nil?
+			vetCabec += sprintf(" %20s %5s ",tknight,myVille.knight) 	if !vectorAttack.index("knight").nil?
+
+			puts vetCabec
+
+		}
+
 	end
+
+
+	def teste(xyList,unitList,time)
+
+		from 	= xyList.split(",")[0]
+		to   	= xyList.split(",")[1]
+		xi	 	=   from.split("|")[0].to_i
+		yi	 	=   from.split("|")[1].to_i
+		xf	 	=     to.split("|")[0].to_i
+		yf	 	=     to.split("|")[1].to_i
+		units 	= unitList.split(",")
+
+		d, theta = polar(xf - xi, yf - yi)
+
+		ville = Village.new
+		
+		timeToGo = 0
+		units.each{|unit|
+			timeToGo = ville.getVar(unit.split("=")[0]+"_vel").to_i if ville.getVar(unit.split("=")[0]+"_vel").to_i > timeToGo
+		}
+		targetTime = Time.parse(time) - timeToGo	* 60 * d
+
+		hostname 	= 'localhost'
+		port 		= 2000
+
+		s = TCPSocket.open(hostname, port)
+
+		s.send("#{targetTime},#{xyList},#{unitList}\0",0)
+
+		puts "s.send(#{targetTime},#{xyList},#{unitList}\0,0)"
+
+		s.send("bye\0",0)
+		s.flush
+		s.close
+
+	end
+
 
 	def loadVar
 
@@ -1028,110 +1183,6 @@ exit(0)
 
 
 end #end Class
-
-options = OpenStruct.new
-options.library = []
-options.inplace = false
-options.encoding = "utf8"
-options.transfer_type = :auto
-options.verbose = false
-opts = OptionParser.new do |opts|
-
-	opts.banner = "Usage: tribal.rb -w world -c [spy|check|farm|fake|ally|targets|incoming|screate|skill|rename|plan|planattack] [options]"
-	opts.separator ""
-	opts.separator "Specific options:"
-	# Optional argument with keyword completion.
-
-	opts.on("-l","--list [LIST]") do |n|	
-		options.list = n 
-	end
-	opts.on("-t","--time [TIME]") do |n|	
-		options.time = n 
-	end
-	opts.on("-v","--village [VILLAGE]") do |n|	
-		options.village_name = n 
-	end
-	opts.on("-w","--world [WORLD]") do |n|	
-		options.world_name = n 
-	end
-	opts.on("-c","--c [COMMAND]", [:spy, :check, :farm, :fake, :ally, :targets, :teste, :incoming, :clean, :skill, :screate, :rename, :plan, :planattack],
-		"Select command type (spy, check, farm, fake, ally, targets, incoming, clean, screate, skill, rename, plan, planattack)") do |c|
-		options.c_type = c
-	end
-
-	opts.on_tail("-h", "--help", "Show this message") do
-		puts opts
-		exit(0)
-	end
-
-end
-opts.parse!(ARGV)
-
-def errorMsg
-	puts "os parametros world e command são obrigatórios.xxx"
-	exec("cd #{File.expand_path(File.dirname(__FILE__) ).to_s};ruby Tribal.rb -h")
-	puts "os parametros world e command são obrigatórios."
-	exit(0)
-end
-
-errorMsg if options.world_name.nil?
-errorMsg if options.c_type.nil?
-
-name   = "xykoBR"
-passwd = "barbara"
-world  = options.world_name
-
-tw = Tribal.new(:name => name,:passwd => passwd,:world => world)
-
-tw.connect
-puts "Connected: #{tw.logged?}"
-
-tw.atualiza_tropas
-
-case options.c_type
-	when :spy
-		puts "spy+"
-		tw.attackSpy(options.village_name)
-	when :farm
-		puts "farm+"
-		tw.farmAll(true)
-	when :fake
-		puts "fake+"
-		tw.fake("")
-	when :ally
-		puts "Executando ally..."
-		tw.ally(options.ally_name)
-	when :targets
-		puts "Executando targets..."
-		tw.targets
-	when :incoming
-		puts "Executando incoming"
-		tw.incoming
-	when :clean
-		puts "Executando clean..."
-		tw.cleanReports
-	when :skill
-		puts "Executando skill..."
-		tw.sendSnobtoKill
-	when :screate
-		puts "Executando screate..."
-		tw.snobCreate
-	when :rename
-		puts "Executando rename..."
-		tw.rename	
-	when :plan
-		puts "Executando plan..."
-		tw.plan(options.village_name)	
-	when :planattack
-		puts "Executando planAttack..."
-		tw.planAttack(options.village_name,options.time)	
-	when :teste
-		puts "Executando teste..."
-		tw.teste
-	else
-		puts "Vazia..."
-end
-
 
 
 
