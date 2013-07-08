@@ -30,7 +30,10 @@ loop {
 				incomingData = incomingData.chomp
 			end
 			if incomingData == "jobs\0"
-				log.info "#{incomingData} => #{scheduler.all_jobs.methods.sort}"
+				log.info "#{incomingData} => #{scheduler.pending_job_count}"
+				scheduler.instance_variable_get("@jobs").instance_variable_get("@jobs").each { |x|
+					log.info  Time.at(x.instance_variable_get("@at").to_i).to_datetime 
+				}
 				client.close
 				break
 			end
@@ -53,7 +56,6 @@ loop {
 				log.info("Origem         : #{msg[1]} ")
 				log.info("Destino        : #{msg[2]} ")
 				log.info("Vetor de ataque: #{msg[3]} ")
-
 
 				scheduler.in "#{seconds}s".to_s do
 					name   = "xykoBR"
@@ -87,8 +89,9 @@ loop {
 
 					log.info("End of schedule attack.")
 
-
 				end
+
+
 
 				# client.puts "#{incomingData}"
 				# client.flush

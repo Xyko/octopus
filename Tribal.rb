@@ -1092,7 +1092,7 @@ exit(0)
 			tsnob  		= Time.parse(time) - myVille.snob_vel		* 60 * d
 			tknight 	= Time.parse(time) - myVille.knight_vel		* 60 * d
 
-			vetCabec =  sprintf("%20s %4.1f ",k,d)
+			vetCabec =  sprintf("%20s %s|%s  %4.1f ",k,myVille.xcoord,myVille.ycoord,d)
 			vetCabec += sprintf(" %20s %5s ",tspy,myVille.spy) 			if !vectorAttack.index("spy").nil?
 			vetCabec += sprintf(" %20s %5s ",tlight,myVille.light) 		if !vectorAttack.index("light").nil?
 			vetCabec += sprintf(" %20s %5s ",theavy,myVille.heavy) 		if !vectorAttack.index("heavy").nil?
@@ -1108,6 +1108,26 @@ exit(0)
 
 			puts vetCabec
 
+			lineAux = ""
+			lineAux += sprintf(" spy=%s "		,myVille.spy) 		if !vectorAttack.index("spy").nil?
+			lineAux += sprintf(" light=%s " 	,myVille.light) 	if !vectorAttack.index("light").nil?
+			lineAux += sprintf(" heavy=%s " 	,myVille.heavy) 	if !vectorAttack.index("heavy").nil?
+			lineAux += sprintf(" marcher=%s " 	,myVille.marcher) 	if !vectorAttack.index("marcher").nil?
+			lineAux += sprintf(" spear=%s " 	,myVille.spear) 	if !vectorAttack.index("spear").nil?
+			lineAux += sprintf(" sword=%s " 	,myVille.sword) 	if !vectorAttack.index("sword").nil?
+			lineAux += sprintf(" archer=%s " 	,myVille.archer) 	if !vectorAttack.index("archer").nil?
+			lineAux += sprintf(" axe=%s " 		,myVille.axe) 		if !vectorAttack.index("axe").nil?
+			lineAux += sprintf(" ram=%s " 		,myVille.ram) 		if !vectorAttack.index("ram").nil?
+			lineAux += sprintf(" catapult=%s " 	,myVille.catapult) 	if !vectorAttack.index("catapult").nil?
+			lineAux += sprintf(" snob=%s " 		,myVille.snob) 		if !vectorAttack.index("snob").nil?
+			lineAux += sprintf(" knight=%s " 	,myVille.knight) 	if !vectorAttack.index("knight").nil?
+
+
+
+			lineAttack = sprintf("s.send(\"%s,%s|%s,%s,%s\\0\",0)",time,myVille.xcoord,myVille.ycoord,target,lineAux)
+
+			puts myVille.name + " => " + lineAttack
+
 		}
 
 	end
@@ -1115,36 +1135,7 @@ exit(0)
 
 	def teste(xyList,unitList,time)
 
-		from 	= xyList.split(",")[0]
-		to   	= xyList.split(",")[1]
-		xi	 	=   from.split("|")[0].to_i
-		yi	 	=   from.split("|")[1].to_i
-		xf	 	=     to.split("|")[0].to_i
-		yf	 	=     to.split("|")[1].to_i
-		units 	= unitList.split(",")
 
-		d, theta = polar(xf - xi, yf - yi)
-
-		ville = Village.new
-		
-		timeToGo = 0
-		units.each{|unit|
-			timeToGo = ville.getVar(unit.split("=")[0]+"_vel").to_i if ville.getVar(unit.split("=")[0]+"_vel").to_i > timeToGo
-		}
-		targetTime = Time.parse(time) - timeToGo	* 60 * d
-
-		hostname 	= 'localhost'
-		port 		= 2000
-
-		s = TCPSocket.open(hostname, port)
-
-		s.send("#{targetTime},#{xyList},#{unitList}\0",0)
-
-		puts "s.send(#{targetTime},#{xyList},#{unitList}\0,0)"
-
-		s.send("bye\0",0)
-		s.flush
-		s.close
 
 	end
 
