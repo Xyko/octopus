@@ -20,3 +20,4 @@ ally*.txt
 .rvmrc
 /info/*
 mechanize.log
+*.png

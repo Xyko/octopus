@@ -1,7 +1,6 @@
 # -*- encoding : utf-8 -*-
 require 'rubygems'
 
-
 class Player
 
 	attr_accessor  :name, :id, :passwd, 

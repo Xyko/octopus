@@ -9,11 +9,13 @@ port = 2000
 
 s = TCPSocket.open(hostname, port)
 
-
+s.send("09/07/2013 11:45:00,616|317,616|316,spy=5\0",0)
 
 s.send("bye\0",0)
 s.flush
 s.close
+
+
 
 
 

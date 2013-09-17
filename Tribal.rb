@@ -16,7 +16,6 @@ load 'World.rb'
 load 'Village.rb'
 load "console.rb"
 
-
 class Tribal
 
 	attr_accessor  :player, :world, :village, :report
@@ -49,16 +48,16 @@ class Tribal
 		@player.villages = Hash.new
 		@world.get_villages.each {|key, value|
 			if value[:user_id].eql?  @player.id
-				@player.villages[value[:name]] = 
+				@player.villages[value[:id]+"_"+value[:name]] = 
 				Village.new(
 					:name 	 => value[:name],
-					:id 	 => value[:id],
+					:id 	 	 => value[:id],
 					:xcoord  => value[:xcoord],
 					:ycoord  => value[:ycoord],
 					:user_id => value[:user_id])
 			end 
 		}
-
+		puts @player.inspect
 	end
 
 	def connect
@@ -68,15 +67,20 @@ class Tribal
 			a.log.level = Logger::INFO
 		}
 		@agent.user_agent_alias = 'Linux Mozilla'
-		page     = @agent.get("http://www.tribalwars.com.br/index.php?action=login&server="+@world.name)
+		page     = @agent.get("http://www.tribalwars.com.br/index.php?action=login&server_"+@world.name)
 		form     = page.forms.first
 		#form.fields.each { |f| puts f.name + "=" + f.value}
 		form.field_with(:name => "user").value      = @player.name
 		form.field_with(:name => "password").value  = @player.passwd
-		form.field_with(:name => "server").value    = @world.name
+		#form.field_with(:name => "server").value    = @world.name
 		@pagePrincipal = @agent.submit(form)
 		analisaBot(@pagePrincipal)
-		#@html = File.open('teste.html','w'){|f| f.write( @pagePrincipal.body.to_s)}
+		#puts @pagePrincipal.body
+
+		@html = File.open('teste.html','w'){|f| f.write( @pagePrincipal.body.to_s)}
+
+		@pagePrincipal.links
+
 		@logged =  @pagePrincipal.body.to_s.index("<title>_xykoBR").nil?
 	end
 
@@ -111,6 +115,11 @@ class Tribal
 	def atualiza_tropas(archers)
 		@player.villages.each  {|key, value|
 			pagePlace = @agent.get('http://'+@world.name+'.tribalwars.com.br/game.php?village='+value.id.to_s+'&screen=place')
+
+
+			puts pagePlace.inspect
+			exit(0)
+
 			analisaBot(pagePlace)
 			value.spear    =  pagePlace.link_with(:href => /#unit_input_spear/).text.sub('(','').sub(')','')
 			value.sword    =  pagePlace.link_with(:href => /#unit_input_sword/).text.sub('(','').sub(')','')
