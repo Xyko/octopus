@@ -302,11 +302,15 @@ class Octupus
       end
 
       page.click_button('Ataque')
-      page.save_screenshot('ataqueTropas_Ataque.png')
+      #page.save_screenshot('ataqueTropas_Ataque.png')
       analisaBot
-      page.click_button('OK')
-      page.save_screenshot('ataqueTropas_OK.png')
-      analisaBot
+
+      page.has_button?('Ok') do
+        page.click_button('OK')
+        #page.save_screenshot('ataqueTropas_OK.png')
+        analisaBot
+      end
+
       return true
   end
 
@@ -321,7 +325,7 @@ class Octupus
 
   def spys(fromcoords)
     cont = 0
-    @temp_vector = janelaSpy(fromcoords,6).sort_by {|_key, value| value}
+    @temp_vector = janelaSpy(fromcoords,7).sort_by {|_key, value| value}
     cont = 0
     @temp_vector.each {|key,value|
       xcoord = key.split(" ")[0].to_i
@@ -345,32 +349,66 @@ class Octupus
     return @player.villages[@player.villages.keys[0]].getVar("id")
   end
 
-  def farmall(abandonedOnly)
+
+  def distbetween(xi,yi,xf,yf)
+    return Math.sqrt((xi - xf) ** 2 + (yi - yf) ** 2).to_i
+  end
+
+  def readreports(page,fromcoords)
+
+    xi      = fromcoords[0].to_i
+    yi      = fromcoords[1].to_i
+    reports = Hash.new
+
+    def getall(xi, yi) 
+      reports = Hash.new
+      page.all('a').each {|a|
+        if a.text.include?('xykoBR') && page.has_link?(a.text)
+          aux = a.text.scan(/\([[:digit:]]{3}\|[[:digit:]]{3}\)/)
+          coords = aux[aux.size-1]
+          xf = coords.gsub(/[()]/,'').split('|')[0].to_i
+          yf = coords.gsub(/[()]/,'').split('|')[1].to_i
+          reports['http://'+@world.name+'.tribalwars.com.br'+a[:href].to_s] = distbetween(xi, yi, xf, yf)
+        end
+      }
+      return reports
+    end
+
+    reports = reports.merge(getall(xi, yi))
+    [2,3,4].each {|index|
+      if !page.all('a', :text => "[#{index}]").empty?()
+        click_link("[#{index}]")
+        reports = reports.merge(getall(xi, yi)) 
+      end
+    }
+
+    return reports.sort_by {|name,dist| dist}
+
+  end
+
+  def farmall(fromcoords)
 
     minimalFarmLimit = 1000
 
     page.visit('http://'+@world.name+'.tribalwars.com.br/game.php?village='+firstId.to_s+'&mode=attack&screen=report')
+    #page.save_screenshot('report1.png')
     analisaBot
-    reports = Array.new
-    page.all('a').each {|a|
-      if a.text.include?('xykoBR') && page.has_link?(a.text)
-        reports.push('http://'+@world.name+'.tribalwars.com.br'+a[:href].to_s)
-      end
-    }
+    reports = readreports(page,fromcoords)
 
     progressbar = ProgressBar.create(:progress_mark => '-' ,:title => "Analisando relatorios", :starting_at => 0, :total => reports.size, :format => '%a %B %p%% %t')    
-    reports.each {|report|
+    reports.each {|report,dist|
         
       index = 1
-      @minimalFarmLimit = 1000
+      @minimalFarmLimit = 500
 
       page.visit(report)  
+      #page.save_screenshot('report2.png')
+      analisaBot
 
       wood = page.find_by_id('attack_spy').text.gsub(/[a-zA-Z:çá()éí.]/,'').split[0].to_i
       clay = page.find_by_id('attack_spy').text.gsub(/[a-zA-Z:çá()éí.]/,'').split[1].to_i
       iron = page.find_by_id('attack_spy').text.gsub(/[a-zA-Z:çá()éí.]/,'').split[2].to_i
       @capacity = wood + clay + iron
-
       coords = page.first(:xpath,'/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td[2]/table/tbody/tr/td/table[2]/tbody/tr[3]/td/table[2]/tbody/tr[2]/td[2]/span/a').text.gsub(/[a-zA-Z:çá()éí.]/,'').strip.split
       xcoord = coords[0].split('|')[0]
       ycoord = coords[0].split('|')[1]
@@ -387,42 +425,42 @@ class Octupus
 
         candidates = getOrdenedVectorNearTo(target)
 
-        progressbarcandidates = ProgressBar.create(:progress_mark => '-' ,:title => "Analisando candidatos", :starting_at => 0, :total => candidates.size, :format => '%a %B %p%% %t')    
         candidates.each {|ville_name,v|
-            progressbarcandidates.increment
-              #     ville = getVillage(ville_name)
+                  ville = getVillage(ville_name)
 
-              #     if ville.farmed_cap > 1000
+                  if ville.farmed_cap > 1000
 
-              #       def internalAttack (ville,target,msg)
-              #         if @vetAttack.size > 0
-              #           puts "internalAttack #{ville.farmed_cap} #{ville.farmed_cap} #{@capacity} #{@vetAttack}"
-              #           @vetAttack = @vetAttack.merge(setTroops "spy=1")
-              #           puts "#{msg} com #{@vetAttack}. Restam: #{ville.light} #{ville.heavy} #{ville.spear} #{ville.sword} #{ville.axe}"
-              #           attackTroops(ville,target,@vetAttack,"attack")
-              #           if  @capacity < @minimalFarmLimit 
-              #             page.all('a', :text => 'apagar')
-              #             analisaBot
-              #           end 
-              #         end
-              #       end
+                    def internalAttack (ville,target,msg,report)
+                      if @vetAttack.size > 0
+                        #puts "internalAttack #{ville.farmed_cap} #{ville.farmed_cap} #{@capacity} #{@vetAttack}"
+                        @vetAttack = @vetAttack.merge(setTroops "spy=1")
+                        #puts "#{msg} com #{@vetAttack}. Restam: #{ville.light} #{ville.heavy} #{ville.spear} #{ville.sword} #{ville.axe}"
+                        attackTroops(ville,target,@vetAttack,"attack")
+                        if  @capacity < @minimalFarmLimit 
+                          page.visit(report) 
+                          page.all('a').select {|elt| elt.text == "Apagar" }.first.click
+                          analisaBot
+                        end 
+                      end
+                    end
 
-              #       msg = "#{index}/#{reports.size} #{ville.name} atacando #{xcoord}/#{ycoord}" 
+                    msg = "#{index}/#{reports.size} #{ville.name} atacando #{xcoord}/#{ycoord}" 
 
-              #       @vetAttack = Hash.new
-              #       attackWithWalkers(ville)  if @capacity > @minimalFarmLimit 
-              #       internalAttack(ville,target,msg) 
+                    @vetAttack = Hash.new
+                    attackWithWalkers(ville)  if @capacity > @minimalFarmLimit 
+                    internalAttack(ville,target,msg,report) 
 
-              #       @vetAttack = Hash.new
-              #       attackWithHorses(ville)   if @capacity > @minimalFarmLimit
-              #       internalAttack(ville,target,msg) 
+                    @vetAttack = Hash.new
+                    attackWithHorses(ville)   if @capacity > @minimalFarmLimit
+                    internalAttack(ville,target,msg,report) 
 
-              #     end
+                  end
 
 
         }
+        index += 1
       else 
-        page.all('a', :text => 'apagar')
+        page.all('a').select {|elt| elt.text == "Apagar" }.first.click
         analisaBot 
       end
 
@@ -492,13 +530,13 @@ class Octupus
         when "100"
           _spear
         when "010"
-          puts "normalizeTroops -> vetVar vetor apenas com sword... retornando"
+          #puts "normalizeTroops -> vetVar vetor apenas com sword... retornando"
           return  
         when "000"
-          puts "normalizeTroops -> vetVar vetor walkwrs vazio... retornando"
+          #puts "normalizeTroops -> vetVar vetor walkwrs vazio... retornando"
           return
         else
-          puts "normalizeTroops -> vetVar não definido #{vetVar}"
+          #puts "normalizeTroops -> vetVar não definido #{vetVar}"
           exit(0)
       end
     end
@@ -514,10 +552,10 @@ class Octupus
         when "01"
           _heavy
         when "00"
-          puts "normalizeTroops -> vetVar vetor horses vazio... retornando"
+          #puts "normalizeTroops -> vetVar vetor horses vazio... retornando"
           return
         else
-          puts "normalizeTroops -> vetVar não definido #{vetVar}"
+          #puts "normalizeTroops -> vetVar não definido #{vetVar}"
           exit(0)
       end
     end
@@ -598,7 +636,7 @@ end
 
 ############ End Octopus
 
-begin
+#begin
   opts = Slop.parse(:help => true, :strict => true) do
     on '-v', 'Print the version' do
       puts "Version 1.0"
@@ -613,19 +651,94 @@ begin
   end
 
   validCommands = ['test','spys', 'screate', 'skill', 'farmall']
-  raise "Invalid Command! Valid are: #{validCommands.inspect}\nTry -h or --help for help." unless validCommands.include?(opts[:command])
+  #raise "Invalid Command! Valid are: #{validCommands.inspect}\nTry -h or --help for help." unless validCommands.include?(opts[:command])
 
-  begin
+  #begin
     octopus = Octupus.new(opts.to_hash)
     octopus.send(opts.to_hash[:command],opts.to_hash[:message])
-  rescue Exception => e
-    puts e.message.light_red
-    puts e.backtrace
-    exit(0)
-  end
+  # rescue Exception => e
+  #   puts e.message.light_red
+  #   puts e.backtrace
+  #   exit(0)
+  # end
 
-rescue Exception => e
-  puts e.message.red
-  puts e.backtrace
-end
+# rescue Exception => e
+#   puts e.message.red
+#   puts e.backtrace
+#end
+
+
+
+
+# =Navigating=
+# visit('/projects')
+# visit(post_comments_path(post))
+ 
+# =Clicking links and buttons=
+# click_link('id-of-link')
+# click_link('Link Text')
+# click_button('Save')
+# click('Link Text') # Click either a link or a button
+# click('Button Value')
+ 
+# =Interacting with forms=
+# fill_in('First Name', :with => 'John')
+# fill_in('Password', :with => 'Seekrit')
+# fill_in('Description', :with => 'Really Long Text…')
+# choose('A Radio Button')
+# check('A Checkbox')
+# uncheck('A Checkbox')
+# attach_file('Image', '/path/to/image.jpg')
+# select('Option', :from => 'Select Box')
+ 
+# =scoping=
+# within("//li[@id='employee']") do
+# fill_in 'Name', :with => 'Jimmy'
+# end
+# within(:css, "li#employee") do
+# fill_in 'Name', :with => 'Jimmy'
+# end
+# within_fieldset('Employee') do
+# fill_in 'Name', :with => 'Jimmy'
+# end
+# within_table('Employee') do
+# fill_in 'Name', :with => 'Jimmy'
+# end
+ 
+# =Querying=
+# page.has_xpath?('//table/tr')
+# page.has_css?('table tr.foo')
+# page.has_content?('foo')
+# page.should have_xpath('//table/tr')
+# page.should have_css('table tr.foo')
+# page.should have_content('foo')
+# page.should have_no_content('foo')
+# find_field('First Name').value
+# find_link('Hello').visible?
+# find_button('Send').click
+# find('//table/tr').click
+# locate("//*[@id='overlay'").find("//h1").click
+# all('a').each { |a| a[:href] }
+ 
+# =Scripting=
+# result = page.evaluate_script('4 + 4');
+ 
+# =Debugging=
+# save_and_open_page
+ 
+# =Asynchronous JavaScript=
+# click_link('foo')
+# click_link('bar')
+# page.should have_content('baz')
+# page.should_not have_xpath('//a')
+# page.should have_no_xpath('//a')
+ 
+# =XPath and CSS=
+# within(:css, 'ul li') { ... }
+# find(:css, 'ul li').text
+# locate(:css, 'input#name').value
+# Capybara.default_selector = :css
+# within('ul li') { ... }
+# find('ul li').text
+# locate('input#name').value
 
