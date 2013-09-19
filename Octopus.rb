@@ -288,7 +288,7 @@ class Octupus
       page.visit('http://'+@world.name+'.tribalwars.com.br/game.php?village='+fromVillage.id.to_s+'&screen=place')
       #puts "Atacanto tropas #{page.status_code}"
       analisaBot
-      page.save_screenshot('ataqueTropas.png')
+      #page.save_screenshot('ataqueTropas.png')
 
       fill_in('x'       , :with => toVillage.xcoord)
       fill_in('y'       , :with => toVillage.ycoord)
@@ -310,14 +310,14 @@ class Octupus
       end
 
       page.click_button('Ataque')
-      page.save_screenshot('ataqueTropas_Ataque.png')
+      #page.save_screenshot('ataqueTropas_Ataque.png')
       analisaBot
 
-      page.has_button?('Ok') do
+      #page.has_button?('Ok') do
         page.click_button('OK')
-        page.save_screenshot('ataqueTropas_OKd.png')
+        page.save_screenshot('ataqueTropas_OK.png')
         analisaBot
-      end
+      #end
 
       return true
 
