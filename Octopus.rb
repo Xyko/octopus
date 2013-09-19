@@ -15,10 +15,18 @@ load 'Village.rb'
 
 class Octupus
 
+
+ 
+  Capybara.register_driver :selenium_with_long_timeout do |app|
+    client = Selenium::WebDriver::Remote::Http::Default.new
+    client.timeout = 120
+    Capybara::Driver::Selenium.new(app, :browser => :firefox, :http_client => client)
+  end
+
   Capybara.app_host           = "http://www.tribalwars.com.br/"
   Capybara.run_server         = false
   Capybara.current_driver     = :poltergeist
-  Capybara.javascript_driver  = :poltergeist
+  Capybara.javascript_driver  = :selenium_with_long_timeout
 
   include Capybara::DSL
 
@@ -62,9 +70,9 @@ class Octupus
       @player.villages = Hash.new
       @world.get_villages.each {|key, value|
         if value[:user_id].eql?  @player.id
-          @player.villages[value[:id]+"_"+value[:name]] = 
+          @player.villages[value[:name]+"_"+value[:id]] = 
           Village.new(
-            :name     => value[:id]+"_"+value[:name],
+            :name     => value[:name]+"_"+value[:id],
             :id       => value[:id],
             :xcoord   => value[:xcoord],
             :ycoord   => value[:ycoord],
@@ -232,7 +240,7 @@ class Octupus
   #Massive snob creater
   def screate(nothing)
     progressbar = ProgressBar.create(:progress_mark => '-' ,:title => "Criando Nobres", :starting_at => 0, :total => @player.villages.size, :format => '%a %B %p%% %t')    
-    @player.villages.each  {|key, ville|
+    @player.villages.sort.each  {|key, ville|
       page.visit('http://'+@world.name+'.tribalwars.com.br/game.php?village='+ville.id.to_s+'&screen=snob')
       #puts "Atualizando academia #{page.status_code}"
       analisaBot
@@ -280,7 +288,7 @@ class Octupus
       page.visit('http://'+@world.name+'.tribalwars.com.br/game.php?village='+fromVillage.id.to_s+'&screen=place')
       #puts "Atacanto tropas #{page.status_code}"
       analisaBot
-      #page.save_screenshot('ataqueTropas.png')
+      page.save_screenshot('ataqueTropas.png')
 
       fill_in('x'       , :with => toVillage.xcoord)
       fill_in('y'       , :with => toVillage.ycoord)
@@ -302,16 +310,17 @@ class Octupus
       end
 
       page.click_button('Ataque')
-      #page.save_screenshot('ataqueTropas_Ataque.png')
+      page.save_screenshot('ataqueTropas_Ataque.png')
       analisaBot
 
       page.has_button?('Ok') do
         page.click_button('OK')
-        #page.save_screenshot('ataqueTropas_OK.png')
+        page.save_screenshot('ataqueTropas_OKd.png')
         analisaBot
       end
 
       return true
+
   end
 
   def setTroops inVector
@@ -323,7 +332,15 @@ class Octupus
     return outVector
   end
 
+  def exitwitherror(msg)
+    puts msg
+    exit(0)
+  end
+
   def spys(fromcoords)
+
+    exitwitherror "O parametro -m é obrigatório." if fromcoords.nil?
+
     cont = 0
     @temp_vector = janelaSpy(fromcoords,7).sort_by {|_key, value| value}
     cont = 0
@@ -650,8 +667,9 @@ end
     on :m, :message=, 'Option message to send', as: Array,  delimiter: ':'
   end
 
-  validCommands = ['test','spys', 'screate', 'skill', 'farmall']
-  #raise "Invalid Command! Valid are: #{validCommands.inspect}\nTry -h or --help for help." unless validCommands.include?(opts[:command])
+  # validCommands = ['test','spys', 'screate', 'skill', 'farmall']
+  # raise "Invalid Command! Valid are: #{validCommands.inspect}\nTry -h or --help for help." unless validCommands.include?(opts[:command])
+
 
   #begin
     octopus = Octupus.new(opts.to_hash)
@@ -662,10 +680,10 @@ end
   #   exit(0)
   # end
 
-# rescue Exception => e
-#   puts e.message.red
-#   puts e.backtrace
-#end
+#  rescue Exception => e
+#    puts e.message.red
+#    puts e.backtrace
+# end
 
 
 
