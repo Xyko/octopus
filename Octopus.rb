@@ -313,11 +313,14 @@ class Octupus
       #page.save_screenshot('ataqueTropas_Ataque.png')
       analisaBot
 
-      #page.has_button?('Ok') do
+
+      begin
         page.click_button('OK')
         page.save_screenshot('ataqueTropas_OK.png')
         analisaBot
-      #end
+      rescue
+        puts "Alvo não tratado #{toVillage.xcoord}/#{toVillage.ycoord}"
+      end
 
       return true
 
@@ -356,7 +359,7 @@ class Octupus
           :ycoord  => ycoord,
           :user_id => '')
       ville = nearTo(xcoord,ycoord)
-      #attackTroops(ville,target,vetAttack,'attack')
+      #farmattackTroops(ville,target,vetAttack,'attack')
       cont += 1
       puts "#{cont} #{@temp_vector.size} #{value} #{xcoord} #{ycoord} <= #{ville.name}"
     }
