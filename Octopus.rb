@@ -356,7 +356,7 @@ class Octupus
           :ycoord  => ycoord,
           :user_id => '')
       ville = nearTo(xcoord,ycoord)
-      attackTroops(ville,target,vetAttack,'attack')
+      #attackTroops(ville,target,vetAttack,'attack')
       cont += 1
       puts "#{cont} #{@temp_vector.size} #{value} #{xcoord} #{ycoord} <= #{ville.name}"
     }
@@ -472,7 +472,6 @@ class Octupus
                     internalAttack(ville,target,msg,report) 
 
                   end
-
 
         }
         index += 1
