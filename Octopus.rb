@@ -345,7 +345,7 @@ class Octupus
     exitwitherror "O parametro -m é obrigatório." if fromcoords.nil?
 
     cont = 0
-    @temp_vector = janelaSpy(fromcoords,7).sort_by {|_key, value| value}
+    @temp_vector = janelaSpy(fromcoords,8).sort_by {|_key, value| value}
     cont = 0
     @temp_vector.each {|key,value|
       xcoord = key.split(" ")[0].to_i
@@ -359,7 +359,7 @@ class Octupus
           :ycoord  => ycoord,
           :user_id => '')
       ville = nearTo(xcoord,ycoord)
-      #farmattackTroops(ville,target,vetAttack,'attack')
+      #attackTroops(ville,target,vetAttack,'attack')
       cont += 1
       puts "#{cont} #{@temp_vector.size} #{value} #{xcoord} #{ycoord} <= #{ville.name}"
     }
@@ -406,9 +406,29 @@ class Octupus
 
   end
 
-  def farmall(fromcoords)
+  def clean(fromcoords)
 
-    minimalFarmLimit = 1000
+    page.visit('http://'+@world.name+'.tribalwars.com.br/game.php?village='+firstId.to_s+'&mode=attack&screen=report')
+    analisaBot
+    reports = readreports(page,fromcoords)
+    puts "Report.size = #{reports.size}"
+    progressbar = ProgressBar.create(:progress_mark => '-' ,:title => "Analisando relatorios", :starting_at => 0, :total => reports.size, :format => '%a %B %p%% %t')    
+    reports.each {|report,dist|
+      page.visit(report)  
+      #page.save_screenshot('report2.png')
+      analisaBot
+      wood = page.find_by_id('attack_spy').text.gsub(/[a-zA-Z:çá()éí.]/,'').split[0].to_i
+      clay = page.find_by_id('attack_spy').text.gsub(/[a-zA-Z:çá()éí.]/,'').split[1].to_i
+      iron = page.find_by_id('attack_spy').text.gsub(/[a-zA-Z:çá()éí.]/,'').split[2].to_i
+      @capacity = wood + clay + iron
+      page.all('a').select {|elt| elt.text == "Apagar" }.first.click if @capacity < 500
+      progressbar.increment
+    }
+
+  end
+
+
+  def farmall(fromcoords)
 
     page.visit('http://'+@world.name+'.tribalwars.com.br/game.php?village='+firstId.to_s+'&mode=attack&screen=report')
     #page.save_screenshot('report1.png')
@@ -419,7 +439,7 @@ class Octupus
     reports.each {|report,dist|
         
       index = 1
-      @minimalFarmLimit = 500
+      @minimalFarmLimit = 300
 
       page.visit(report)  
       #page.save_screenshot('report2.png')
@@ -429,12 +449,13 @@ class Octupus
       clay = page.find_by_id('attack_spy').text.gsub(/[a-zA-Z:çá()éí.]/,'').split[1].to_i
       iron = page.find_by_id('attack_spy').text.gsub(/[a-zA-Z:çá()éí.]/,'').split[2].to_i
       @capacity = wood + clay + iron
+
       coords = page.first(:xpath,'/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td[2]/table/tbody/tr/td/table[2]/tbody/tr[3]/td/table[2]/tbody/tr[2]/td[2]/span/a').text.gsub(/[a-zA-Z:çá()éí.]/,'').strip.split
       xcoord = coords[0].split('|')[0]
       ycoord = coords[0].split('|')[1]
 
-      if wood > 100 || clay > 100 || iron > 100 && wood + clay + iron > 300
-
+      #if wood > 100 || clay > 100 || iron > 100 && wood + clay + iron > 300
+      if @capacity >= @minimalFarmLimit
         target = Village.new(
           :xcoord   => xcoord,
           :ycoord   => ycoord,
@@ -452,26 +473,28 @@ class Octupus
 
                     def internalAttack (ville,target,msg,report)
                       if @vetAttack.size > 0
-                        #puts "internalAttack #{ville.farmed_cap} #{ville.farmed_cap} #{@capacity} #{@vetAttack}"
+                        puts "internalAttack #{ville.farmed_cap} #{ville.farmed_cap} #{@capacity} #{@vetAttack}"
                         @vetAttack = @vetAttack.merge(setTroops "spy=1")
-                        #puts "#{msg} com #{@vetAttack}. Restam: #{ville.light} #{ville.heavy} #{ville.spear} #{ville.sword} #{ville.axe}"
+                        puts "#{msg} com #{@vetAttack}. Restam: #{ville.light} #{ville.heavy} #{ville.spear} #{ville.sword} #{ville.axe}"
                         attackTroops(ville,target,@vetAttack,"attack")
-                        if  @capacity < @minimalFarmLimit 
+                        if @capacity < @minimalFarmLimit 
                           page.visit(report) 
                           page.all('a').select {|elt| elt.text == "Apagar" }.first.click
+                          puts "internalAttack Apagando....."
                           analisaBot
                         end 
                       end
                     end
-
+ 
                     msg = "#{index}/#{reports.size} #{ville.name} atacando #{xcoord}/#{ycoord}" 
 
                     @vetAttack = Hash.new
                     attackWithWalkers(ville)  if @capacity > @minimalFarmLimit 
                     internalAttack(ville,target,msg,report) 
-
+                    #puts "walkers #{@vetAttack}"
                     @vetAttack = Hash.new
                     attackWithHorses(ville)   if @capacity > @minimalFarmLimit
+                    #puts "horses #{@vetAttack}"
                     internalAttack(ville,target,msg,report) 
 
                   end
@@ -480,6 +503,7 @@ class Octupus
         index += 1
       else 
         page.all('a').select {|elt| elt.text == "Apagar" }.first.click
+        puts "internalAttack out of Apagando....."
         analisaBot 
       end
 
@@ -655,22 +679,29 @@ end
 
 ############ End Octopus
 
-#begin
+begin
   opts = Slop.parse(:help => true, :strict => true) do
     on '-v', 'Print the version' do
       puts "Version 1.0"
     end
-    on :w, :world=,   'Your world'
-    on :l, :login=,   'Your login'
-    on :p, :passwd=,  'Your passwd'
+    on :w, :world=,   'Your world',  :required => true
+    on :l, :login=,   'Your login',  :required => true
+    on :p, :passwd=,  'Your passwd',  :required => true
     on :c, :command=, 'Your command'
     on :a, :archers,  'Archers boolean'
     on :n, :nologin,  'Login boolean'
     on :m, :message=, 'Option message to send', as: Array,  delimiter: ':'
   end
 
-  # validCommands = ['test','spys', 'screate', 'skill', 'farmall']
-  # raise "Invalid Command! Valid are: #{validCommands.inspect}\nTry -h or --help for help." unless validCommands.include?(opts[:command])
+  validCommands = ['test','spys', 'screate', 'skill', 'farmall', 'clean']
+  raise "Invalid Command! Valid are: #{validCommands.inspect}\nTry -h or --help for help." unless validCommands.include?(opts[:command])
+
+  case opts[:command]
+    when "spys", "farmall", "clean"
+      raise "Command #{opts[:command]} required -m." if opts[:message].nil?
+    else
+      puts "Parser completed."  
+  end
 
 
   #begin
@@ -682,10 +713,10 @@ end
   #   exit(0)
   # end
 
-#  rescue Exception => e
-#    puts e.message.red
-#    puts e.backtrace
-# end
+ rescue Exception => e
+   puts e.message.red
+   #puts e.backtrace
+end
 
 
 
@@ -762,3 +793,7 @@ end
 # find('ul li').text
 # locate('input#name').value
 
+
+
+# Tel: (21) 2289-91... |  2597-78...
+# 3111-6704
