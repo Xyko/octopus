@@ -4,8 +4,9 @@ require 'ruby-progressbar'
 
 class World
   
-  attr_accessor :name, :archers, :nologin
+  attr_accessor :name, :archers, :nologin, :vet_attack_types
   
+
   def archers
     @archers || false
   end
@@ -15,7 +16,7 @@ class World
   end
   
   def get_knowledge_base
-      
+
       players = File.open(File.expand_path(File.dirname(__FILE__) ).to_s + '/player'+@name+'.txt') 
       progressbarPlayers = ProgressBar.create(:progress_mark => '-' ,:title => "Players", :starting_at => 0, :total => players.size, :format => '%a %B %p%% %t')
       players.each do |line|

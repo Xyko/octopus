@@ -15,8 +15,6 @@ load 'Village.rb'
 
 class Octupus
 
-
- 
   Capybara.register_driver :selenium_with_long_timeout do |app|
     client = Selenium::WebDriver::Remote::Http::Default.new
     client.timeout = 120
@@ -41,6 +39,12 @@ class Octupus
     @player.passwd  = options[:passwd]
     @world.archers  = true if options[:archers]
     @world.nologin  = true if options[:nologin]    
+
+    if @world.archers
+      @world.vet_attack_types = ["spear","sword","axe","archer","marcher","light","heavy"]
+    else
+      @world.vet_attack_types = ["spear","sword","axe","light","heavy"]
+    end
 
     if @world.nologin || @world.name.nil? || @player.passwd.nil? || @player.name.nil?
       puts "No Login actions".green
@@ -84,7 +88,6 @@ class Octupus
       refreshTroops
 
     end
-
   end
 
   def testeVillages
@@ -320,6 +323,7 @@ class Octupus
         analisaBot
       rescue
         puts "Alvo não tratado #{toVillage.xcoord}/#{toVillage.ycoord}"
+        page.save_screenshot("#{toVillage.xcoord}_#{toVillage.ycoord}.png")
       end
 
       return true
@@ -335,17 +339,9 @@ class Octupus
     return outVector
   end
 
-  def exitwitherror(msg)
-    puts msg
-    exit(0)
-  end
-
   def spys(fromcoords)
-
-    exitwitherror "O parametro -m é obrigatório." if fromcoords.nil?
-
     cont = 0
-    @temp_vector = janelaSpy(fromcoords,8).sort_by {|_key, value| value}
+    @temp_vector = janelaSpy(fromcoords,6).sort_by {|_key, value| value}
     cont = 0
     @temp_vector.each {|key,value|
       xcoord = key.split(" ")[0].to_i
@@ -359,7 +355,7 @@ class Octupus
           :ycoord  => ycoord,
           :user_id => '')
       ville = nearTo(xcoord,ycoord)
-      #attackTroops(ville,target,vetAttack,'attack')
+      attackTroops(ville,target,vetAttack,'attack')
       cont += 1
       puts "#{cont} #{@temp_vector.size} #{value} #{xcoord} #{ycoord} <= #{ville.name}"
     }
@@ -368,7 +364,6 @@ class Octupus
   def firstId
     return @player.villages[@player.villages.keys[0]].getVar("id")
   end
-
 
   def distbetween(xi,yi,xf,yf)
     return Math.sqrt((xi - xf) ** 2 + (yi - yf) ** 2).to_i
@@ -403,7 +398,6 @@ class Octupus
     }
 
     return reports.sort_by {|name,dist| dist}
-
   end
 
   def clean(fromcoords)
@@ -424,7 +418,131 @@ class Octupus
       page.all('a').select {|elt| elt.text == "Apagar" }.first.click if @capacity < 500
       progressbar.increment
     }
+  end
 
+#   def farmanalize(arguments)
+#     ville     = arguments[:ville]
+#     capacity  = arguments[:capacity]
+#     troop     = arguments[:troop]
+#     vetAttack = arguments[:vetAttack]
+#     tn  = ville.getVar(troop).to_i
+#     tc  = ville.getVar(troop+"_cap").to_i
+#     tcapacity = tn * tc
+
+# ville.explain_cap
+# ville.setVar("spear", 10)
+# ville.explain_cap
+# exit(0)
+
+#     if tcapacity >= capacity
+#       capacity = 0
+#       restante = (tn - capacity/tc).to_i
+#       ville.setVar(troop,restante)
+#     else
+#       capacity += tcapacity
+#       restante  = 0
+#       ville.setVar(troop,restante)
+#     end
+
+
+#     vetAttack = vetAttack.merge(setTroops "#{troop}=#{restante}")
+#     return  {:capacity => capacity, :vetAttack =>  vetAttack}
+
+#   end
+
+#   def newfarmall(fromcoords)
+#     page.visit('http://'+@world.name+'.tribalwars.com.br/game.php?village='+firstId.to_s+'&mode=attack&screen=report')
+#     reports = readreports(page,fromcoords)
+
+#     minimalFarmLimit = 300
+#     reports.each {|report,dist|
+#       page.visit(report) 
+#       wood = page.find_by_id('attack_spy').text.gsub(/[a-zA-Z:çá()éí.]/,'').split[0].to_i
+#       clay = page.find_by_id('attack_spy').text.gsub(/[a-zA-Z:çá()éí.]/,'').split[1].to_i
+#       iron = page.find_by_id('attack_spy').text.gsub(/[a-zA-Z:çá()éí.]/,'').split[2].to_i
+#       capacity = wood + clay + iron
+#       coords = page.first(:xpath,'/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td[2]/table/tbody/tr/td/table[2]/tbody/tr[3]/td/table[2]/tbody/tr[2]/td[2]/span/a').text.gsub(/[a-zA-Z:çá()éí.]/,'').strip.split
+#       xcoord = coords[0].split('|')[0]
+#       ycoord = coords[0].split('|')[1]
+#       puts "#{capacity} #{xcoord} #{ycoord}"
+#       if capacity >= minimalFarmLimit
+#         target = Village.new(
+#           :xcoord   => xcoord,
+#           :ycoord   => ycoord,
+#           :wood     => wood.to_i,
+#           :clay     => clay.to_i,
+#           :iron     => iron.to_i,
+#           :delete   => "")
+
+#         candidates = getOrdenedVectorNearTo(target)
+#         candidates.each {|ville_name,v|
+#           ville = getVillage(ville_name)
+#           puts "Distance: #{dist} #{ville.name} #{ville.xcoord} #{ville.ycoord} Farm #{ville.farmed_cap} Def #{ville.defense_cap} Atck #{ville.attack_cap}"
+#           if ville.farmed_cap - minimalFarmLimit > capacity           
+#             puts "achei o candidato"
+
+# vetAttack = Hash.new
+# returns = farmanalize({:ville => ville, :capacity => capacity,:troop => "spear",:vetAttack =>  vetAttack})
+
+#             # vetAttack = Hash.new
+#             # @world.vet_attack_types.each {|troop|
+#             #   returns  = farmanalize({:ville => ville, :capacity => capacity,:troop => troop,:vetAttack =>  vetAttack})
+#             #   puts returns[:capacity]
+#             #   puts returns[:vetAttack]
+#             #   ville.explain_cap
+#             #   capacity = returns[:capacity]
+#             #   if capacity <= minimalFarmLimit
+#             #     puts "Vetor para ser usado  no atack #{returns.inspect}"
+#             #     break
+#             #   end
+#             # }
+#           end
+#         }
+
+#       end
+#     }
+#   end
+
+  def emptyville(ville)
+    @world.vet_attack_types.each{|troop|
+      ville.setVar(troop,0) if [true,false].sample
+    }
+  end
+
+  def farmprepare(ville,capacity)
+
+  end
+
+  def farmanalize(arguments)
+    ville   = arguments[:ville]
+    coords  = arguments[:coords]
+    #case test
+    #emptyville(ville)
+    page.visit('http://'+@world.name+'.tribalwars.com.br/game.php?village='+firstId.to_s+'&mode=attack&screen=report')
+    analisaBot
+    reports = readreports(page,coords)
+    reports.each {|report,dist|
+      page.visit(report)
+      analisaBot
+      wood = page.find_by_id('attack_spy').text.gsub(/[a-zA-Z:çá()éí.]/,'').split[0].to_i
+      clay = page.find_by_id('attack_spy').text.gsub(/[a-zA-Z:çá()éí.]/,'').split[1].to_i
+      iron = page.find_by_id('attack_spy').text.gsub(/[a-zA-Z:çá()éí.]/,'').split[2].to_i
+      capacity = wood + clay + iron
+      coords = page.first(:xpath,'/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td[2]/table/tbody/tr/td/table[2]/tbody/tr[3]/td/table[2]/tbody/tr[2]/td[2]/span/a').text.gsub(/[a-zA-Z:çá()éí.]/,'').strip.split
+      xcoord = coords[0].split('|')[0]
+      ycoord = coords[0].split('|')[1]
+      farmprepare(ville,capacity)
+    }
+  end
+
+  def newfarmall(coords) 
+    @player.reports = readreports(page,coords)
+    while @player.updatecapacity > 300
+      puts @player.updatecapacity
+      @player.villages.each  {|key, ville|
+        farmanalize({:ville => ville, :coords => coords}) if ville.farmed_cap > 0
+      }
+    end
   end
 
 
@@ -435,11 +553,12 @@ class Octupus
     analisaBot
     reports = readreports(page,fromcoords)
 
+    @minimalFarmLimit = 300
+
     progressbar = ProgressBar.create(:progress_mark => '-' ,:title => "Analisando relatorios", :starting_at => 0, :total => reports.size, :format => '%a %B %p%% %t')    
     reports.each {|report,dist|
         
       index = 1
-      @minimalFarmLimit = 300
 
       page.visit(report)  
       #page.save_screenshot('report2.png')
@@ -486,15 +605,19 @@ class Octupus
                       end
                     end
  
+                    index += 1
                     msg = "#{index}/#{reports.size} #{ville.name} atacando #{xcoord}/#{ycoord}" 
 
                     @vetAttack = Hash.new
                     attackWithWalkers(ville)  if @capacity > @minimalFarmLimit 
                     internalAttack(ville,target,msg,report) 
-                    #puts "walkers #{@vetAttack}"
+                    
                     @vetAttack = Hash.new
-                    attackWithHorses(ville)   if @capacity > @minimalFarmLimit
-                    #puts "horses #{@vetAttack}"
+                    attackWithArchers(ville)   if @capacity > @minimalFarmLimit
+                    internalAttack(ville,target,msg,report) 
+
+                    @vetAttack = Hash.new
+                    attackWithHorses(ville)   if @capacity > @minimalFarmLimit            
                     internalAttack(ville,target,msg,report) 
 
                   end
@@ -550,6 +673,16 @@ class Octupus
       @_heavy    -= 1
     end
 
+    def _archer
+      @capacity  -=  @_archer_cap 
+      @_archer    -= 1
+    end
+
+    def _marcher
+      @capacity  -= @_marcher_cap
+      @_marcher    -= 1
+    end
+
     if type == :walkers
       vetVarWalkers = byZero(@_spear) + byZero(@_sword) + byZero(@_axe)
       case vetVarWalkers
@@ -603,12 +736,30 @@ class Octupus
       end
     end
 
+    if type == :archers
+      vetVarArchors  = byZero(@_archer) + byZero(@_marcher) 
+      case vetVarArchors
+        when "11"
+          _archer
+          _marcher
+        when "10"
+          _archer
+        when "01"
+          _marcher
+        when "00"
+          #puts "normalizeTroops -> vetVar vetor horses vazio... retornando"
+          return
+        else
+          #puts "normalizeTroops -> vetVar não definido #{vetVar}"
+          exit(0)
+      end
+    end
+
     normalizeTroops(type) if @capacity > @minimalFarmLimit 
 
     return
     
-    #puts "#{@capacity} #{@_spear} #{@_sword} #{@_axe}"
-  
+    #puts "#{@capacity} #{@_spear} #{@_sword} #{@_axe}" 
   end
 
   def attackWithWalkers(ville) 
@@ -643,7 +794,6 @@ class Octupus
       @capacity - capAux
       
     end
-
   end
 
   def attackWithHorses(ville) 
@@ -667,7 +817,47 @@ class Octupus
       @vetAttack = @vetAttack.merge(setTroops "heavy=#{heavy.to_i}")
 
     end
+  end
 
+  def attackWithArchers(ville) 
+     
+    @_archer    = ville.getVar("archer").to_i
+    @_marcher     = ville.getVar("marcher").to_i
+    @_archer_cap   = ville.getVar("archer_cap").to_i
+    @_marcher_cap   = ville.getVar("marcher_cap").to_i
+
+    normalizeTroops(:archers)
+
+    archer = ville.getVar("archer").to_i - @_archer.to_i 
+    marcher = ville.getVar("marcher").to_i - @_marcher.to_i 
+
+    if archer + marcher > 3
+
+      ville.setVar("archer" ,@_archer)
+      ville.setVar("marcher" ,@_marcher)
+
+      @vetAttack = @vetAttack.merge(setTroops "archer=#{archer.to_i}")
+      @vetAttack = @vetAttack.merge(setTroops "marcher=#{marcher.to_i}")
+
+    end
+  end
+
+  def rename(msg)
+    progressbar = ProgressBar.create(:progress_mark => '-' ,:title => "Renomeando", :starting_at => 0, :total => @player.villages.size, :format => '%a %B %p%% %t')    
+    @player.villages.each  {|key, ville|
+      page.visit('http://'+@world.name+'.tribalwars.com.br/game.php?village='+ville.id.to_s+'&screen=main')
+      analisaBot
+      name = ""
+      (1..20).each{
+        #name += ["Ã","Â","Á","À"].sample 
+        #name += ["à","á","â"].sample 
+        name += ["0","1"].sample 
+      }
+      fill_in('name',  :with => name)
+      page.click_button('Alterar')
+      page.save_screenshot(name+'.png')
+      progressbar.increment
+    }
   end
 
 
@@ -679,7 +869,7 @@ end
 
 ############ End Octopus
 
-begin
+#begin
   opts = Slop.parse(:help => true, :strict => true) do
     on '-v', 'Print the version' do
       puts "Version 1.0"
@@ -693,11 +883,11 @@ begin
     on :m, :message=, 'Option message to send', as: Array,  delimiter: ':'
   end
 
-  validCommands = ['test','spys', 'screate', 'skill', 'farmall', 'clean']
-  raise "Invalid Command! Valid are: #{validCommands.inspect}\nTry -h or --help for help." unless validCommands.include?(opts[:command])
+  # validCommands = ['test','spys', 'screate', 'skill', 'farmall', 'clean', 'newfarmall', 'rename']
+  # raise "Invalid Command! Valid are: #{validCommands.inspect}\nTry -h or --help for help." unless validCommands.include?(opts[:command])
 
   case opts[:command]
-    when "spys", "farmall", "clean"
+    when "spys", "farmall", "clean", "newfarmall"
       raise "Command #{opts[:command]} required -m." if opts[:message].nil?
     else
       puts "Parser completed."  
@@ -713,87 +903,8 @@ begin
   #   exit(0)
   # end
 
- rescue Exception => e
-   puts e.message.red
-   #puts e.backtrace
-end
-
-
-
-
-# =Navigating=
-# visit('/projects')
-# visit(post_comments_path(post))
- 
-# =Clicking links and buttons=
-# click_link('id-of-link')
-# click_link('Link Text')
-# click_button('Save')
-# click('Link Text') # Click either a link or a button
-# click('Button Value')
- 
-# =Interacting with forms=
-# fill_in('First Name', :with => 'John')
-# fill_in('Password', :with => 'Seekrit')
-# fill_in('Description', :with => 'Really Long Text…')
-# choose('A Radio Button')
-# check('A Checkbox')
-# uncheck('A Checkbox')
-# attach_file('Image', '/path/to/image.jpg')
-# select('Option', :from => 'Select Box')
- 
-# =scoping=
-# within("//li[@id='employee']") do
-# fill_in 'Name', :with => 'Jimmy'
+#  rescue Exception => e
+#    puts e.message.red
+#    #puts e.backtrace
 # end
-# within(:css, "li#employee") do
-# fill_in 'Name', :with => 'Jimmy'
-# end
-# within_fieldset('Employee') do
-# fill_in 'Name', :with => 'Jimmy'
-# end
-# within_table('Employee') do
-# fill_in 'Name', :with => 'Jimmy'
-# end
- 
-# =Querying=
-# page.has_xpath?('//table/tr')
-# page.has_css?('table tr.foo')
-# page.has_content?('foo')
-# page.should have_xpath('//table/tr')
-# page.should have_css('table tr.foo')
-# page.should have_content('foo')
-# page.should have_no_content('foo')
-# find_field('First Name').value
-# find_link('Hello').visible?
-# find_button('Send').click
-# find('//table/tr').click
-# locate("//*[@id='overlay'").find("//h1").click
-# all('a').each { |a| a[:href] }
- 
-# =Scripting=
-# result = page.evaluate_script('4 + 4');
- 
-# =Debugging=
-# save_and_open_page
- 
-# =Asynchronous JavaScript=
-# click_link('foo')
-# click_link('bar')
-# page.should have_content('baz')
-# page.should_not have_xpath('//a')
-# page.should have_no_xpath('//a')
- 
-# =XPath and CSS=
-# within(:css, 'ul li') { ... }
-# find(:css, 'ul li').text
-# locate(:css, 'input#name').value
-# Capybara.default_selector = :css
-# within('ul li') { ... }
-# find('ul li').text
-# locate('input#name').value
 
-
-
-# Tel: (21) 2289-91... |  2597-78...
-# 3111-6704

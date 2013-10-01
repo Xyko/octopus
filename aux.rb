@@ -1,27 +1,15 @@
+require 'rubygems'
 
 
-# require 'date'
-# require 'rufus/scheduler'
-# scheduler = Rufus::Scheduler.start_new
 
-# scheduler.in "24000s" do
-# 	puts "teste"
-# end
+x = [1,2,3,4,5,6,7,8,9]
 
-# scheduler.pending_job_count
+while x.size > 0
+	puts x.size
+	x.delete_at(rand(x.size))
+end
 
 
-# #scheduler.instance_variable_get("@jobs").instance_variable_get("@jobs")[0].instance_variable_get("@at")
 
 
-# scheduler.instance_variable_get("@jobs").instance_variable_get("@jobs").each { |x|
-# 	puts Time.at(x.instance_variable_get("@at").to_i).to_datetime 
-# }
 
-
-      players = File.open(File.expand_path(File.dirname(__FILE__) ).to_s + '/playerbr52.txt')
-      players.each do |line|
-        
-       puts line.to_s
-
-      end

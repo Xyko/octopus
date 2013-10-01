@@ -105,6 +105,18 @@ class Village
 
 	end
 
+	def explain_cap
+		puts "Spear   #{self.spear_cap.to_i 	* self.spear.to_i 		}"
+		puts "Sword   #{self.sword_cap.to_i	* self.sword.to_i 		}"
+		puts "Axe     #{self.axe_cap.to_i   	* self.axe.to_i 		  }"	 	
+		puts "Light   #{self.light_cap.to_i 	* self.light.to_i 	 	}"
+		puts "Heavy   #{self.heavy_cap.to_i 	* self.heavy.to_i 	 	}"
+		puts "Marcher #{self.marcher_cap.to_i* self.marcher.to_i 	}"
+		puts "Archer  #{self.archer_cap.to_i * self.archer.to_i 	}" 
+	end 
+
+
+
 	def getVar(info)
 		return self.instance_variable_get("@#{info}") if instance_variable_defined?("@#{info}")
 	end
@@ -113,7 +125,7 @@ class Village
 	end
 
 	def farmed_cap
-		self.farmed_cap = 	self.spear_cap.to_i	* self.spear.to_i	+
+		self.farmed_cap = self.spear_cap.to_i	* self.spear.to_i	+
 							self.sword_cap.to_i	* self.sword.to_i	+
 							self.axe_cap.to_i	* self.axe.to_i		+
 							self.light_cap.to_i	* self.light.to_i	+

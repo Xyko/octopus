@@ -8,9 +8,19 @@ class Player
 	:points, :rank, 
 	:villages,
 	:targets,
-	:principal
+	:principal,
+	:farm_capacity,
+	:reports
 
 	def initialize(options = {})
+	end
+
+	def updatecapacity
+		farm_capacity = 0
+		villages.each{|ville_name,ville|
+			farm_capacity += ville.farmed_cap
+		}
+		return farm_capacity
 	end
 
 end

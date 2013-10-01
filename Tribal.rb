@@ -1144,8 +1144,6 @@ exit(0)
 
 	def teste(xyList,unitList,time)
 
-
-
 	end
 
 
