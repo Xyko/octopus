@@ -16,12 +16,13 @@ class Village
 	:catapult, 	:catapult_cap, 	:catapult_vel, 	:catapult_def, 	:catapult_atck	, 
 	:knight, 	:knight_cap, 	:knight_vel, 	:knight_def, 	:knight_atck	, 	
 	:snob, 		:snob_cap, 		:snob_vel, 		:snob_def, 		:snob_atck	, 		
-	:wood, :clay, :iron, 
+	:wood, :stone, :iron, 
 	:delete,
 	:farmed_cap, 
 	:distance, :h_capacity, :resources, :continent, :master,
 	:defense_cap,
-	:attack_cap
+	:attack_cap,
+	:capacity
 
 	def initialize(options = {})
 
@@ -32,14 +33,15 @@ class Village
 		self.user_id	= options[:user_id].to_i
 		self.id			= options[:id].to_i	
 		self.wood		= options[:wood].to_i	
-		self.clay		= options[:clay].to_i	
+		self.stone		= options[:stone].to_i	
 		self.iron		= options[:iron].to_i
-		self.resources	= options[:wood].to_i + options[:clay].to_i + options[:iron].to_i
+		self.resources	= options[:wood].to_i + options[:stone].to_i + options[:iron].to_i
 		self.delete		= options[:delete]
 		self.farmed_cap = options[:farmed].to_i
 		self.distance	= 0
 		self.defense_cap= 0
 		self.attack_cap = 0
+		self.capacity = 0
 		
 		self.spear_cap 	= 25 * h_capacity.to_i
 		self.sword_cap	= 15 * h_capacity.to_i
@@ -103,6 +105,13 @@ class Village
 
 		self.continent	= self.ycoord.to_s[0]+self.xcoord.to_s[0]
 
+	end
+
+	def setresources(wood,stone,iron,capacity)
+		self.wood		= wood.to_i	
+		self.stone		= stone.to_i	
+		self.iron		= iron.to_i
+		self.capacity = capacity
 	end
 
 	def explain_cap
