@@ -1183,50 +1183,60 @@ def programado(msg)
 
   origem = @world.getVillageObjectByCoords(564,510)
 
-  puts origem.class
-
   vetAttack = Hash.new
   vetAttack = vetAttack.merge(setTroops 'spy=2')
   vetAttack = vetAttack.merge(setTroops 'light=24')
 
-  attackTroops(origem, @world.getVillageObjectByCoords(564,507), vetAttack,"attack")
-  10.downto(1) { |c| 
-    puts c
-    sleep 1 
-  }
-  attackTroops(origem, @world.getVillageObjectByCoords(564,507), vetAttack,"attack")
-  
+  attackTroops(origem, @world.getVillageObjectByCoords(567,515), vetAttack,"attack")            
+  attackTroops(origem, @world.getVillageObjectByCoords(569,513), vetAttack,"attack") 
+  sleep 1
+  attackTroops(origem, @world.getVillageObjectByCoords(560,506), vetAttack,"attack")        
+  attackTroops(origem, @world.getVillageObjectByCoords(568,514), vetAttack,"attack")           
+  sleep 3
+  attackTroops(origem, @world.getVillageObjectByCoords(562,515), vetAttack,"attack")           
+  attackTroops(origem, @world.getVillageObjectByCoords(566,515), vetAttack,"attack")           
+  sleep 3
+  attackTroops(origem, @world.getVillageObjectByCoords(559,510), vetAttack,"attack")            
+  sllep 1
+  attackTroops(origem, @world.getVillageObjectByCoords(563,505), vetAttack,"attack")            
+  attackTroops(origem, @world.getVillageObjectByCoords(569,509), vetAttack,"attack")           
+  sleep 1
+  attackTroops(origem, @world.getVillageObjectByCoords(559,510), vetAttack,"attack") 
+  sleep 5
+  attackTroops(origem, @world.getVillageObjectByCoords(560,508), vetAttack,"attack")            
+  sleep 3
+  attackTroops(origem, @world.getVillageObjectByCoords(560,509), vetAttack,"attack")            
+  attackTroops(origem, @world.getVillageObjectByCoords(563,514), vetAttack,"attack")            
+  sleep 1
+  attackTroops(origem, @world.getVillageObjectByCoords(568,510), vetAttack,"attack")            
+  sleep 2
+  attackTroops(origem, @world.getVillageObjectByCoords(561,508), vetAttack,"attack")            
+  sleep 5
+  attackTroops(origem, @world.getVillageObjectByCoords(561,509), vetAttack,"attack")            
+  attackTroops(origem, @world.getVillageObjectByCoords(565,513), vetAttack,"attack")            
+  sleep 2
+  attackTroops(origem, @world.getVillageObjectByCoords(564,507), vetAttack,"attack")            
+  attackTroops(origem, @world.getVillageObjectByCoords(567,510 ), vetAttack,"attack")           
+  sleep 7
+  attackTroops(origem, @world.getVillageObjectByCoords(562,511), vetAttack,"attack")            
+  sleep 3
+  attackTroops(origem, @world.getVillageObjectByCoords(566,510), vetAttack,"attack")            
+  attackTroops(origem, @world.getVillageObjectByCoords(564,512), vetAttack,"attack")            
+  attackTroops(origem, @world.getVillageObjectByCoords(562,510), vetAttack,"attack")            
 
 
 end
 
 
-# attackTroops(fromVillage, toVillage, vTropas, ,"attack")
 
 
-# "564:510","564:507","17:34:00"
-# "564:510","561:509","17:32:22"
-# "564:510","565:513","17:32:22"
-# "564:510","567:510","17:34:00"
-# "564:510","567:512","17:27:50"
-# "564:510","561:508","17:27:56"
-# "564:510","566:510","17:44:00"
-# "564:510","562:510","17:44:00"
-# "564:510","568:510","17:24:00"
-# "564:510","560:509","17:22:46"
-# "564:510","560:511","17:22:46"
-# "564:510","563:514","17:22:46"
-# "564:510","562:511","17:41:38"
-# "564:510","560:508","17:19:16"
-# "564:510","559:510","17:14:00"
-# "564:510","563:505","17:13:00"
-# "564:510","569:509","17:13:00"
-# "564:510","562:515","17:10:08"
-# "564:510","566:515","17:10:08"
-# "564:510","560:506","17:07:25"
-# "564:510","568:514","17:07:25"
-# "564:510","567:515","17:05:41"
-# "564:510","569:513","17:05:41"
+
+
+
+
+
+
+
 
 
 
