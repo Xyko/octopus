@@ -22,7 +22,11 @@ class Village
 	:distance, :h_capacity, :resources, :continent, :master,
 	:defense_cap,
 	:attack_cap,
-	:capacity
+	:capacity,
+	:aux,
+	:tox, 
+	:toy
+
 
 	def initialize(options = {})
 
@@ -104,7 +108,9 @@ class Village
 		self.snob 		= 0
 
 		self.continent	= self.ycoord.to_s[0]+self.xcoord.to_s[0]
-
+		self.aux		= 0
+		self.tox		= 0
+		self.toy		= 0
 	end
 
 	def setresources(wood,stone,iron,capacity)
@@ -112,6 +118,15 @@ class Village
 		self.stone		= stone.to_i	
 		self.iron		= iron.to_i
 		self.capacity = capacity
+	end
+
+	def setresourcesto(wood,stone,iron,capacity,tox,toy)
+		self.wood		= wood.to_i	
+		self.stone		= stone.to_i	
+		self.iron		= iron.to_i
+		self.capacity = capacity
+		self.tox  = tox 
+		self.toy  = toy 
 	end
 
 	def explain_cap

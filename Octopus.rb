@@ -9,6 +9,7 @@ require 'slop'
 require 'colorize'
 require 'ruby-progressbar'
 require 'time_difference'
+require 'termios'
 
 load 'Player.rb'
 load 'World.rb'
@@ -87,8 +88,6 @@ class Octupus
         end 
       }
       login
-      refreshTroops
-
     end
   end
 
@@ -113,6 +112,7 @@ class Octupus
   def analisaBot
     botMsg = "contra Bots"
     if page.body.to_s.index(botMsg)
+      puts "BOT found.... aborting..."
       page.save_screenshot('boot.png')
       exit(0)
     end
@@ -127,73 +127,144 @@ class Octupus
     analisaBot
     case @world.name
     when "br44"
-    #page.save_screenshot('screenshot1.png')
-    sleep(5)
-    path = "/html/body/div[2]/div/div[2]/div/div[2]/div[2]/div/div[2]/form/div/div/a[1]/span"
-    page.first(:xpath, path).click
+      sleep(5)
+      path = "/html/body/div[2]/div/div[2]/div/div[2]/div[2]/div/div[2]/form/div/div/a[1]/span"
+      page.first(:xpath, path).click
     when "br48"
       path = "/html/body/div[2]/div/div[2]/div/div[2]/div[2]/div/div[2]/form/div/div/a[2]/span"
       page.find(:xpath, path).click
     when "br52"
       path = "/html/body/div[2]/div/div[2]/div/div[2]/div[2]/div/div[2]/form/div/div/a[3]/span"
       page.find(:xpath, path).click
+    when "br56"
+      path = "/html/body/div[2]/div/div[2]/div/div[2]/div[2]/div/div[2]/form/div/div/a[4]/span"
+      page.find(:xpath, path).click
     else
       puts "Invalid world..."
       exit(0)
     end
 
-  #page.find(:xpath, "/html/body/div[2]/div/div[2]/div/div[2]/div[2]/form/div/div/div/a/span[2]").click
-  #page.find(:xpath, path).click
-  #puts "Loging status => #{page.status_code}."
-  #page.save_screenshot('screenshot1.png')
-  analisaBot
-end
-
-def refreshTroops
-
-  progressbar = ProgressBar.create(:progress_mark => '-' ,:title => "Atualizando", :starting_at => 0, :total => @player.villages.size, :format => '%a %B %p%% %t')
-  @player.villages.each  {|key, value|
-
-    page.visit('http://'+@world.name+'.tribalwars.com.br/game.php?village='+value.id.to_s+'&screen=place')
-    #puts "Atualizando tropas #{page.status_code}"
     analisaBot
+  end
 
-    path_spear    = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td/table/tbody/tr/td/a[2]"
-    path_sword    = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td/table/tbody/tr[2]/td/a[2]"
-    path_axe      = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td/table/tbody/tr[3]/td/a[2]"
-    path_spy      = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[2]/table/tbody/tr/td/a[2]"     
-    path_light    = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[2]/table/tbody/tr[2]/td/a[2]"
-    path_ram      = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[3]/table/tbody/tr/td/a[2]"
-    path_catapult = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[3]/table/tbody/tr[2]/td/a[2]"
-    path_knight   = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[4]/table/tbody/tr/td/a[2]"
-    path_snob     = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[4]/table/tbody/tr[2]/td/a[2]"
+  def refreshTroops(typeVector)
 
-    value.spear   = page.first(:xpath, path_spear   ).text.sub('(','').sub(')','')
-    value.sword   = page.first(:xpath, path_sword   ).text.sub('(','').sub(')','')
-    value.axe     = page.first(:xpath, path_axe     ).text.sub('(','').sub(')','')
-    value.spy     = page.first(:xpath, path_spy     ).text.sub('(','').sub(')','')
-    value.light   = page.first(:xpath, path_light   ).text.sub('(','').sub(')','')
-    value.ram     = page.first(:xpath, path_ram     ).text.sub('(','').sub(')','')
-    value.catapult= page.first(:xpath, path_catapult).text.sub('(','').sub(')','')
-    value.knight  = page.first(:xpath, path_knight  ).text.sub('(','').sub(')','')
-    value.snob    = page.first(:xpath, path_snob    ).text.sub('(','').sub(')','')
+    #progressbar = ProgressBar.create(:progress_mark => '-' ,:title => "Atualizando", :starting_at => 0, :total => @player.villages.size, :format => '%a %B %p%% %t')
+    @player.villages.each  {|key, value|
 
-    if @world.archers
+      page.visit('http://'+@world.name+'.tribalwars.com.br/game.php?village='+value.id.to_s+'&screen=place')
+   
+      path_spear    = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td/table/tbody/tr/td/a[2]"
+      path_sword    = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td/table/tbody/tr[2]/td/a[2]"
+      path_axe      = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td/table/tbody/tr[3]/td/a[2]"
+      path_spy      = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[2]/table/tbody/tr/td/a[2]"     
+      path_light    = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[2]/table/tbody/tr[2]/td/a[2]"
+      path_ram      = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[3]/table/tbody/tr/td/a[2]"
+      path_catapult = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[3]/table/tbody/tr[2]/td/a[2]"
+      path_knight   = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[4]/table/tbody/tr/td/a[2]"
+      path_snob     = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[4]/table/tbody/tr[2]/td/a[2]"
       path_archer   = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td/table/tbody/tr[4]/td/a[2]"
       path_marcher  = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[2]/table/tbody/tr[3]/td/a[2]"
       path_heavy    = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[2]/table/tbody/tr[4]/td/a[2]"
-      value.archer  = page.first(:xpath, path_archer  ).text.sub('(','').sub(')','')
-      value.heavy   = page.first(:xpath, path_heavy   ).text.sub('(','').sub(')','')
-      value.marcher = page.first(:xpath, path_marcher ).text.sub('(','').sub(')','')
-    else
-      path_heavy    = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[2]/table/tbody/tr[3]/td/a[2]"
-      value.heavy   = page.first(:xpath, path_heavy   ).text.sub('(','').sub(')','')
-      value.archer  = 0
-      value.marcher = 0
-    end 
-    progressbar.increment
-  }
-end
+
+      typeVector.each {|type|
+          case type
+            when "snob"
+              value.snob   = page.first(:xpath, path_snob   ).text.sub('(','').sub(')','') if page.has_field?(path_snob)
+              #puts page.has_field?(path_snob) 
+            # when "spear"
+            #   value.spear   = page.first(:xpath, path_spear   ).text.sub('(','').sub(')','') if page.has_field?(path_spear)
+            # when "sword"
+            #   value.sword   = page.first(:xpath, path_sword   ).text.sub('(','').sub(')','') if page.has_field?(path_sword)
+            # when "axe"
+            #   value.axe     = page.first(:xpath, path_axe     ).text.sub('(','').sub(')','') if page.has_field?(path_axe)
+            # when "spy"
+            #   value.spy     = page.first(:xpath, path_spy     ).text.sub('(','').sub(')','') if page.has_field?(path_spy)
+            # when "light"
+            #   value.ram     = page.first(:xpath, path_ram     ).text.sub('(','').sub(')','') if page.has_field?(path_ram)
+            # when "ram"
+            #   value.ram     = page.first(:xpath, path_ram     ).text.sub('(','').sub(')','') if page.has_field?(path_ram)
+            # when "catapult"
+            #   value.catapult= page.first(:xpath, path_catapult).text.sub('(','').sub(')','') if page.has_field?(path_catapult)
+            # when "knight"
+            #   value.knight  = page.first(:xpath, path_knight  ).text.sub('(','').sub(')','') if page.has_field?(path_knight)
+            # when "archer"
+            #   value.archer  = page.first(:xpath, path_archer  ).text.sub('(','').sub(')','') if page.has_field?(path_archer)
+            # when "heavy"
+            #   value.heavy   = page.first(:xpath, path_heavy   ).text.sub('(','').sub(')','') if page.has_field?(path_heavy)
+            # when "marcher"
+            #   value.marcher = page.first(:xpath, path_marcher ).text.sub('(','').sub(')','') if page.has_field?(path_marcher)
+            else
+              puts "refreshTrops. Type not recgnized."
+              exit(0)
+          end
+      }
+
+    #progressbar.increment
+    }
+  end
+
+#   def refreshAllTroops
+
+#     progressbar = ProgressBar.create(:progress_mark => '-' ,:title => "Atualizando", :starting_at => 0, :total => @player.villages.size, :format => '%a %B %p%% %t')
+#     @player.villages.each  {|key, value|
+
+#       page.visit('http://'+@world.name+'.tribalwars.com.br/game.php?village='+value.id.to_s+'&screen=place')
+#     #puts "Atualizando tropas #{value.name}"
+#     analisaBot
+
+#     path_spear    = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td/table/tbody/tr/td/a[2]"
+#     path_sword    = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td/table/tbody/tr[2]/td/a[2]"
+#     path_axe      = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td/table/tbody/tr[3]/td/a[2]"
+#     path_spy      = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[2]/table/tbody/tr/td/a[2]"     
+#     path_light    = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[2]/table/tbody/tr[2]/td/a[2]"
+#     path_ram      = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[3]/table/tbody/tr/td/a[2]"
+#     path_catapult = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[3]/table/tbody/tr[2]/td/a[2]"
+#     path_knight   = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[4]/table/tbody/tr/td/a[2]"
+#     path_snob     = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[4]/table/tbody/tr[2]/td/a[2]"
+
+
+#     #puts "Snob #{page.first(:xpath, '//*[@id=unit_input_snob]')}"
+
+#     value.spear   = page.first(:xpath, path_spear   ).text.sub('(','').sub(')','') if page.has_field?(path_spear)
+#     value.sword   = page.first(:xpath, path_sword   ).text.sub('(','').sub(')','') if page.has_field?(path_sword)
+#     value.axe     = page.first(:xpath, path_axe     ).text.sub('(','').sub(')','') if page.has_field?(path_axe)
+#     value.spy     = page.first(:xpath, path_spy     ).text.sub('(','').sub(')','') if page.has_field?(path_spy)
+#     value.light   = page.first(:xpath, path_light   ).text.sub('(','').sub(')','') if page.has_field?(path_light)
+#     value.ram     = page.first(:xpath, path_ram     ).text.sub('(','').sub(')','') if page.has_field?(path_ram)
+#     value.catapult= page.first(:xpath, path_catapult).text.sub('(','').sub(')','') if page.has_field?(path_catapult)
+#     value.knight  = page.first(:xpath, path_knight  ).text.sub('(','').sub(')','') if page.has_field?(path_knight)
+#     value.snob    = page.first(:xpath, path_snob    ).text.sub('(','').sub(')','') if page.has_field?(path_snob)
+ 
+
+#     puts find_field('unit_input_snob').inspect
+
+#     puts "Snob #{find_field('unit_input_snob').value} #{value.spear}"
+
+#     path_archer   = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td/table/tbody/tr[4]/td/a[2]"
+#     path_marcher  = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[2]/table/tbody/tr[3]/td/a[2]"
+#     path_heavy    = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[2]/table/tbody/tr[4]/td/a[2]"
+#     value.archer  = page.first(:xpath, path_archer  ).text.sub('(','').sub(')','') if page.has_field?(path_archer)
+#     value.heavy   = page.first(:xpath, path_heavy   ).text.sub('(','').sub(')','') if page.has_field?(path_heavy)
+#     value.marcher = page.first(:xpath, path_marcher ).text.sub('(','').sub(')','') if page.has_field?(path_marcher)
+
+#     if @world.archers
+#       path_archer   = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td/table/tbody/tr[4]/td/a[2]"
+#       path_marcher  = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[2]/table/tbody/tr[3]/td/a[2]"
+#       path_heavy    = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[2]/table/tbody/tr[4]/td/a[2]"
+#       value.archer  = page.first(:xpath, path_archer  ).text.sub('(','').sub(')','') if page.has_field?(path_archer)
+#       value.heavy   = page.first(:xpath, path_heavy   ).text.sub('(','').sub(')','') if page.has_field?(path_heavy)
+#       value.marcher = page.first(:xpath, path_marcher ).text.sub('(','').sub(')','') if page.has_field?(path_marcher)
+#     else
+#       path_heavy    = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[2]/table/tbody/tr[3]/td/a[2]"
+#       value.heavy   = page.first(:xpath, path_heavy   ).text.sub('(','').sub(')','') if page.has_field?(path_heavy)
+#       value.archer  = 0
+#       value.marcher = 0
+#     end 
+#     progressbar.increment
+#   }
+# end
+
 
 def getVillage(villageName)
   @player.villages.each  {|key, value|
@@ -227,9 +298,10 @@ def nearTo(xi, yi)
     if dist <= menor and dist > 0 then
       menor = Math.sqrt((xi - xf) ** 2 + (yi - yf) ** 2)
       key   = rkey
+      rvalue.aux = dist
     end
   }
-  #puts "escolhemos a menor distancia = #{menor} #{key}"
+
   return @player.villages[key]
 end
 
@@ -253,27 +325,43 @@ end
 def screate(nothing)
   progressbar = ProgressBar.create(:progress_mark => '-' ,:title => "Criando Nobres", :starting_at => 0, :total => @player.villages.size, :format => '%a %B %p%% %t')    
   @player.villages.sort.each  {|key, ville|
-    page.visit('http://'+@world.name+'.tribalwars.com.br/game.php?village='+ville.id.to_s+'&screen=snob')
-  #puts "Atualizando academia #{page.status_code}"
-  analisaBot
-  page.click_link('Formar unidade') if page.has_link?('Formar unidade')
-  progressbar.increment
+    page.visit('http://'+@world.name+'.tribalwars.com.br/game.php?village='+ville.id.to_s+'&screen=snob') 
+    analisaBot
+    page.click_link('Formar unidade') if page.has_link?('Formar unidade')
+    progressbar.increment
   }
 end
 
 #Massive snob killer
 def skill(nothing)  
-  progressbar = ProgressBar.create(:progress_mark => '-' ,:title => "Matando Nobres", :starting_at => 0, :total => @player.villages.size, :format => '%a %B %p%% %t')    
+
+  #refreshTroops(["snob","spear","sword","axe","spy","light","ram","catapult","knight","archer","marcher","heavy"])
+  refreshTroops(["snob"])
+
+  # path_spear    = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td/table/tbody/tr/td/a[2]"
+  # path_sword    = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td/table/tbody/tr[2]/td/a[2]"
+  # path_axe      = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td/table/tbody/tr[3]/td/a[2]"
+  # path_spy      = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[2]/table/tbody/tr/td/a[2]"     
+  # path_light    = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[2]/table/tbody/tr[2]/td/a[2]"
+  # path_ram      = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[3]/table/tbody/tr/td/a[2]"
+  # path_catapult = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[3]/table/tbody/tr[2]/td/a[2]"
+  # path_knight   = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[4]/table/tbody/tr/td/a[2]"
+  # path_snob     = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[4]/table/tbody/tr[2]/td/a[2]"
+  # path_archer   = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td/table/tbody/tr[4]/td/a[2]"
+  # path_marcher  = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[2]/table/tbody/tr[3]/td/a[2]"
+  # path_heavy    = "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/form/table/tbody/tr[3]/td[2]/table/tbody/tr[4]/td/a[2]"
+
+  #progressbar = ProgressBar.create(:progress_mark => '-' ,:title => "Matando Nobres", :starting_at => 0, :total => @player.villages.size, :format => '%a %B %p%% %t')    
   @player.villages.each  {|key, ville|
+    puts "Ville #{ville.name} #{ville.snob}"
     if ville.snob.to_i > 0
       target = nearTo(ville.xcoord, ville.ycoord)
-  #puts "Enviando #{ville.snob} nobres from #{ville.name} to death => #{target.name}"
-  vetAttack = Hash.new
-  vetAttack = vetAttack.merge(setTroops "snob=#{ville.snob}")
-  attackTroops(ville,target,vetAttack,"attack")
-  end
-  progressbar.increment
-}
+      vetAttack = Hash.new
+      vetAttack = vetAttack.merge(setTroops "snob=#{ville.snob}")
+      attackTroops(ville,target,vetAttack,"attack")
+    end
+    #progressbar.increment
+  }
 end
 
 def janelaSpy(fromcoords, tolerance)
@@ -295,12 +383,13 @@ def janelaSpy(fromcoords, tolerance)
   return vetRet
 end
 
+
+
+
 def attackTroops(fromVillage, toVillage, vTropas, attackType)
 
   page.visit('http://'+@world.name+'.tribalwars.com.br/game.php?village='+fromVillage.id.to_s+'&screen=place')
-  #puts "Atacanto tropas #{page.status_code}"
   analisaBot
-  #page.save_screenshot('ataqueTropas.png')
 
   fill_in('x'       , :with => toVillage.xcoord)
   fill_in('y'       , :with => toVillage.ycoord)
@@ -322,17 +411,14 @@ def attackTroops(fromVillage, toVillage, vTropas, attackType)
   end
 
   page.click_button('Ataque')
-  #page.save_screenshot('ataqueTropas_Ataque.png')
   analisaBot
 
 
   begin
     page.click_button('OK')
-  #page.save_screenshot('ataqueTropas_OK.png')
-  analisaBot
+    analisaBot
   rescue
     puts "Alvo não tratado #{toVillage.xcoord}/#{toVillage.ycoord}"
-  #page.save_screenshot("#{toVillage.xcoord}_#{toVillage.ycoord}.png")
   end
 
   return true
@@ -350,7 +436,7 @@ end
 
 def spys(fromcoords)
   cont = 0
-  @temp_vector = janelaSpy(fromcoords,6).sort_by {|_key, value| value}
+  @temp_vector = janelaSpy(fromcoords,7).sort_by {|_key, value| value}
   cont = 0
   @temp_vector.each {|key,value|
     xcoord = key.split(" ")[0].to_i
@@ -390,9 +476,11 @@ def readreports(page,fromcoords)
       if a.text.include?('xykoBR') && page.has_link?(a.text)
         aux = a.text.scan(/\([[:digit:]]{3}\|[[:digit:]]{3}\)/)
         coords = aux[aux.size-1]
-        xf = coords.gsub(/[()]/,'').split('|')[0].to_i
-        yf = coords.gsub(/[()]/,'').split('|')[1].to_i
-        reports['http://'+@world.name+'.tribalwars.com.br'+a[:href].to_s] = distbetween(xi, yi, xf, yf)
+        if coords.class == String
+          xf = coords.gsub(/[()]/,'').split('|')[0].to_i
+          yf = coords.gsub(/[()]/,'').split('|')[1].to_i
+          reports['http://'+@world.name+'.tribalwars.com.br'+a[:href].to_s] = distbetween(xi, yi, xf, yf)
+        end
       end
     }
     return reports
@@ -408,6 +496,12 @@ def readreports(page,fromcoords)
 
   return reports.sort_by {|name,dist| dist}
 end
+
+
+# def readreports(page,fromcoords)
+#   reports = Hash.new
+
+# end
 
 def cleanothers(fromcoords)
   page.visit('http://'+@world.name+'.tribalwars.com.br/game.php?village='+firstId.to_s+'&mode=defense&screen=report')
@@ -443,17 +537,6 @@ def clean(fromcoords)
     @capacity = wood + stone + iron
     page.all('a').select {|elt| elt.text == "Apagar" }.first.click if @capacity < 500
 
-
-    # if page.find_by_id('attack_spy unidade')
-    #   wood = page.find_by_id('attack_spy').text.gsub(/[a-zA-Z:çá()éí.]/,'').split[0].to_i
-    #   stone = page.find_by_id('attack_spy').text.gsub(/[a-zA-Z:çá()éí.]/,'').split[1].to_i
-    #   iron = page.find_by_id('attack_spy').text.gsub(/[a-zA-Z:çá()éí.]/,'').split[2].to_i
-    #   @capacity = wood + stone + iron
-    #   page.all('a').select {|elt| elt.text == "Apagar" }.first.click if @capacity < 500
-    # else
-    #   page.all('a').select {|elt| elt.text == "Apagar" }.first.click if @capacity < 500
-    # end
-
     progressbar.increment
   }
 end
@@ -467,8 +550,7 @@ end
 def farmanalize(arguments)
   ville   = arguments[:ville]
   coords  = arguments[:coords]
-  #case test
-  #emptyville(ville)
+
   page.visit('http://'+@world.name+'.tribalwars.com.br/game.php?village='+firstId.to_s+'&mode=attack&screen=report')
   analisaBot
   reports = readreports(page,coords)
@@ -483,7 +565,7 @@ def farmanalize(arguments)
     xcoord = coords[0].split('|')[0]
     ycoord = coords[0].split('|')[1]
     farmprepare(ville,capacity)
-}
+  }
 end
 
 def newfarmall(coords) 
@@ -500,7 +582,7 @@ end
 def farmall(fromcoords)
 
   page.visit('http://'+@world.name+'.tribalwars.com.br/game.php?village='+firstId.to_s+'&mode=attack&screen=report')
-  #page.save_screenshot('report1.png')
+
   analisaBot
   reports = readreports(page,fromcoords)
 
@@ -512,82 +594,82 @@ def farmall(fromcoords)
     index = 1
 
     page.visit(report)  
-  #page.save_screenshot('report2.png')
-  analisaBot
 
-  wood = page.find_by_id('attack_spy').text.gsub(/[a-zA-Z:çá()éí.]/,'').split[0].to_i
-  stone = page.find_by_id('attack_spy').text.gsub(/[a-zA-Z:çá()éí.]/,'').split[1].to_i
-  iron = page.find_by_id('attack_spy').text.gsub(/[a-zA-Z:çá()éí.]/,'').split[2].to_i
-  @capacity = wood + stone + iron
+    analisaBot
 
-  coords = page.first(:xpath,'/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td[2]/table/tbody/tr/td/table[2]/tbody/tr[3]/td/table[2]/tbody/tr[2]/td[2]/span/a').text.gsub(/[a-zA-Z:çá()éí.]/,'').strip.split
-  xcoord = coords[0].split('|')[0]
-  ycoord = coords[0].split('|')[1]
+    wood = page.find_by_id('attack_spy').text.gsub(/[a-zA-Z:çá()éí.]/,'').split[0].to_i
+    stone = page.find_by_id('attack_spy').text.gsub(/[a-zA-Z:çá()éí.]/,'').split[1].to_i
+    iron = page.find_by_id('attack_spy').text.gsub(/[a-zA-Z:çá()éí.]/,'').split[2].to_i
+    @capacity = wood + stone + iron
 
-  #if wood > 100 || stone > 100 || iron > 100 && wood + stone + iron > 300
-  if @capacity >= @minimalFarmLimit
-    target = Village.new(
-      :xcoord   => xcoord,
-      :ycoord   => ycoord,
-      :wood     => wood.to_i,
-      :stone     => stone.to_i,
-      :iron     => iron.to_i,
-      :delete   => "")
+    coords = page.first(:xpath,'/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td[2]/table/tbody/tr/td/table[2]/tbody/tr[3]/td/table[2]/tbody/tr[2]/td[2]/span/a').text.gsub(/[a-zA-Z:çá()éí.]/,'').strip.split
+    xcoord = coords[0].split('|')[0]
+    ycoord = coords[0].split('|')[1]
 
-    candidates = getOrdenedVectorNearTo(target)
 
-    candidates.each {|ville_name,v|
-      ville = getVillage(ville_name)
+    if @capacity >= @minimalFarmLimit
+      target = Village.new(
+        :xcoord   => xcoord,
+        :ycoord   => ycoord,
+        :wood     => wood.to_i,
+        :stone     => stone.to_i,
+        :iron     => iron.to_i,
+        :delete   => "")
 
-      if ville.farmed_cap > 1000
+      candidates = getOrdenedVectorNearTo(target)
 
-        def internalAttack (ville,target,msg,report)
-          if @vetAttack.size > 0
-            puts "internalAttack #{ville.farmed_cap} #{ville.farmed_cap} #{@capacity} #{@vetAttack}"
-            @vetAttack = @vetAttack.merge(setTroops "spy=1")
-            puts "#{msg} com #{@vetAttack}. Restam: #{ville.light} #{ville.heavy} #{ville.spear} #{ville.sword} #{ville.axe}"
-            attackTroops(ville,target,@vetAttack,"attack")
-            if @capacity < @minimalFarmLimit 
-              page.visit(report) 
-              page.all('a').select {|elt| elt.text == "Apagar" }.first.click
-              puts "internalAttack Apagando....."
-              analisaBot
-            end 
+      candidates.each {|ville_name,v|
+        ville = getVillage(ville_name)
+
+        if ville.farmed_cap > 1000
+
+          def internalAttack (ville,target,msg,report)
+            if @vetAttack.size > 0
+              #puts "internalAttack #{ville.farmed_cap} #{ville.farmed_cap} #{@capacity} #{@vetAttack}"
+              @vetAttack = @vetAttack.merge(setTroops "spy=1")
+              #puts "#{msg} com #{@vetAttack}. Restam: #{ville.light} #{ville.heavy} #{ville.spear} #{ville.sword} #{ville.axe}"
+              attackTroops(ville,target,@vetAttack,"attack")
+              if @capacity < @minimalFarmLimit 
+                page.visit(report) 
+                page.all('a').select {|elt| elt.text == "Apagar" }.first.click
+                #puts "internalAttack Apagando....."
+                analisaBot
+              end 
+            end
           end
+
+          index += 1
+          msg = "#{index}/#{reports.size} #{ville.name} atacando #{xcoord}/#{ycoord}" 
+
+          @vetAttack = Hash.new
+          attackWithWalkers(ville)  if @capacity > @minimalFarmLimit 
+          internalAttack(ville,target,msg,report) 
+
+          @vetAttack = Hash.new
+          attackWithArchers(ville)   if @capacity > @minimalFarmLimit
+          internalAttack(ville,target,msg,report) 
+
+          @vetAttack = Hash.new
+          attackWithHorses(ville)   if @capacity > @minimalFarmLimit            
+          internalAttack(ville,target,msg,report) 
+
         end
 
-        index += 1
-        msg = "#{index}/#{reports.size} #{ville.name} atacando #{xcoord}/#{ycoord}" 
+      }
+      index += 1
+    else 
+      page.all('a').select {|elt| elt.text == "Apagar" }.first.click
+      #puts "internalAttack out of Apagando....."
+      analisaBot 
+    end
 
-        @vetAttack = Hash.new
-        attackWithWalkers(ville)  if @capacity > @minimalFarmLimit 
-        internalAttack(ville,target,msg,report) 
-
-        @vetAttack = Hash.new
-        attackWithArchers(ville)   if @capacity > @minimalFarmLimit
-        internalAttack(ville,target,msg,report) 
-
-        @vetAttack = Hash.new
-        attackWithHorses(ville)   if @capacity > @minimalFarmLimit            
-        internalAttack(ville,target,msg,report) 
-
-      end
-
-    }
-    index += 1
-  else 
-    page.all('a').select {|elt| elt.text == "Apagar" }.first.click
-    puts "internalAttack out of Apagando....."
-    analisaBot 
-  end
-
-  progressbar.increment
+    progressbar.increment
   }
 end
 
 def normalizeTroops(type)
 
-  puts " #{@capacity} #{@_spear} #{@_sword} #{@_axe}"
+  #puts " #{@capacity} #{@_spear} #{@_sword} #{@_axe}"
 
   def byZero(itsZero)
     return "1" if itsZero > 0
@@ -657,13 +739,13 @@ def normalizeTroops(type)
     when "100"
       _spear
     when "010"
-      puts "normalizeTroops -> vetVar vetor apenas com sword... retornando"
+      #puts "normalizeTroops -> vetVar vetor apenas com sword... retornando"
       return  
     when "000"
-      puts "normalizeTroops -> vetVar vetor walkwrs vazio... retornando"
+      #puts "normalizeTroops -> vetVar vetor walkwrs vazio... retornando"
       return
     else
-      puts "normalizeTroops -> vetVar não definido #{vetVar}"
+      #puts "normalizeTroops -> vetVar não definido #{vetVar}"
       exit(0)
     end
   end
@@ -679,10 +761,10 @@ def normalizeTroops(type)
     when "01"
       _heavy
     when "00"
-      puts "normalizeTroops -> vetVar vetor horses vazio... retornando"
+      #puts "normalizeTroops -> vetVar vetor horses vazio... retornando"
       return
     else
-      puts "normalizeTroops -> vetVar não definido #{vetVar}"
+      #puts "normalizeTroops -> vetVar não definido #{vetVar}"
       exit(0)
     end
   end
@@ -698,10 +780,10 @@ def normalizeTroops(type)
     when "01"
       _marcher
     when "00"
-      puts "normalizeTroops -> vetVar vetor horses vazio... retornando"
+      #puts "normalizeTroops -> vetVar vetor horses vazio... retornando"
       return
     else
-      puts "normalizeTroops -> vetVar não definido #{vetVar}"
+      #puts "normalizeTroops -> vetVar não definido #{vetVar}"
       exit(0)
     end
   end
@@ -710,7 +792,7 @@ def normalizeTroops(type)
 
   return
 
-  puts "#{@capacity} #{@_spear} #{@_sword} #{@_axe}" 
+  #puts "#{@capacity} #{@_spear} #{@_sword} #{@_axe}" 
 end
 
 def attackWithWalkers(ville) 
@@ -793,20 +875,33 @@ def attackWithArchers(ville)
   end
 end
 
-def rename(msg)
-  progressbar = ProgressBar.create(:progress_mark => '-' ,:title => "Renomeando", :starting_at => 0, :total => @player.villages.size, :format => '%a %B %p%% %t')    
-  @player.villages.each  {|key, ville|
-    page.visit('http://'+@world.name+'.tribalwars.com.br/game.php?village='+ville.id.to_s+'&screen=main')
-    analisaBot
-    name = ""
-    (1..20).each{
-      name += ["0","1"].sample 
-    }
-    fill_in('name',  :with => name)
-    page.click_button('Alterar')
-    progressbar.increment
-  }
-end
+# def rename(msg)
+#   progressbar = ProgressBar.create(:progress_mark => '-' ,:title => "Renomeando", :starting_at => 0, :total => @player.villages.size, :format => '%a %B %p%% %t')    
+#   @player.villages.each  {|key, ville|
+#     if 
+#     page.visit('http://'+@world.name+'.tribalwars.com.br/game.php?village='+ville.id.to_s+'&screen=main')
+#     analisaBot
+#     name = ""
+#     # name += "xy"
+#     # (1..3).each{
+#     #   name += ["-","+"].sample 
+#     # }
+#     # #name += "ko"
+#     # (1..3).each{
+#     #   name += ["-","+"].sample 
+#     # }
+#     # #name += "BR"
+#     # (1..3).each{
+#     #   name += ["-","+"].sample 
+#     # }
+#     # (1..11).each{
+#     #   name += [" ","."].sample
+#     # }
+#     fill_in('name',  :with => name)
+#     page.click_button('Alterar')
+#     progressbar.increment
+#   }
+# end
 
 def shop(msg)
 
@@ -908,48 +1003,231 @@ end
 
 
 def polar(x,y)
-  theta = Math.atan2(y,x)   # Compute the angle
-  r = Math.hypot(x,y)       # Compute the distance
-  [ r, theta]                # The last expression is the return value
+  theta = Math.atan2(y,x)   
+  r = Math.hypot(x,y)       
+  [ r, theta]               
 end
 
-def planAttack(target)
+def attack(msg)
 
-  xf    = target[0].to_i
-  yf    = target[1].to_i
-  dia   = target[2].to_i
-  mes   = target[3].to_i
-  hora  = target[4].to_i
-  minuto= target[5].to_i
+  puts "Attacking....."
+  @vetAttack = Hash.new
+  
 
-  vector = Hash.new
-  @player.villages.each {|keyv, ville|
-    xi = ville.xcoord.to_i
-    yi = ville.ycoord.to_i
-    r, theta = polar(xf - xi, yf - yi)
-    vector[ville.name] = r
+  @vetAttack = @vetAttack.merge(setTroops "spear=200 sword=200 archer=200 spy=200 heavy=150 ram=15 catapult=50 snob=1")
+  attackTroops(getVillage("111"),@world.getVillageObjectByCoords(535,544),@vetAttack,"attack")
+  attackTroops(getVillage("111"),@world.getVillageObjectByCoords(535,544),@vetAttack,"attack")
+  attackTroops(getVillage("111"),@world.getVillageObjectByCoords(535,544),@vetAttack,"attack")
+
+end
+
+def change(msg)
+
+  progressbar = ProgressBar.create(:progress_mark => '-' ,:title => "Trocando Recursos", :starting_at => 0, :total => @player.villages.size, :format => '%a %B %p%% %t')    
+  @player.villages.each  {|key, ville|
+    page.visit('http://'+@world.name+'.tribalwars.com.br/game.php?village='+ville.id.to_s+'&screen=market&mode=own_offer')
+    analisaBot
+    within page.find_by_id('own_offer_form') do
+      fill_in('sell',:with => 10000)
+      fill_in('buy' ,:with => 10000)
+      fill_in('multi',:with => 5)
+      choose('res_sell_wood')
+      choose('res_buy_stone')
+      click_button('Criar')     
+    end
+    progressbar.increment
   }
 
-  t = Time.new(2013, mes, dia, hora, minuto, 0)
+end
 
-  (vector.sort_by {|name,dist| dist}).each {|k,v|
-    cv = t - 11 * v * 60
-    w  = t - 22 * v * 60
-    s  = t - 35 * v * 60
-    d  = format("%.1f", v)
-    ville = getVillage(k)
-    puts format("%20s %8s %8s %8s %5s %5s %5s %5s\n", 
-      k,
-      "#{cv.hour}:#{cv.min}:#{cv.sec}",
-      "#{ w.hour}:#{ w.min}:#{ w.sec}",
-      "#{ s.hour}:#{ s.min}:#{ s.sec}", 
-      ville.axe.to_s,
-      ville.heavy.to_s,
-      ville.snob.to_s,               
-      d)    
+
+def train(msg)
+
+  puts "Iniciando Train"
+
+  fromVillage = @world.getVillageObjectByCoords(564,510)
+
+  visit('http://'+@world.name+'.tribalwars.com.br/game.php?village='+fromVillage.id.to_s+'&screen=place')
+  fill_in('x'       , :with => 563)
+  fill_in('y'       , :with => 511)
+  fill_in('spy'     , :with => 5)
+  click_button('Ataque')
+  click_button('OK')
+
+  visit('http://'+@world.name+'.tribalwars.com.br/game.php?village='+fromVillage.id.to_s+'&screen=place')
+  fill_in('x'       , :with => 563)
+  fill_in('y'       , :with => 511)
+  fill_in('spy'     , :with => 5)
+  click_button('Ataque')
+  click_button('OK')
+
+
+  # analisaBot
+
+  # fill_in('x'       , :with => toVillage.xcoord)
+  # fill_in('y'       , :with => toVillage.ycoord)
+
+  # fill_in('spy'     , :with => vTropas["spy"])
+  # fill_in('spear'   , :with => vTropas["spear"])
+  # fill_in('sword'   , :with => vTropas["sword"])
+  # fill_in('axe'     , :with => vTropas["axe"])
+  # fill_in('light'   , :with => vTropas["light"])
+  # fill_in('heavy'   , :with => vTropas["heavy"])
+  # fill_in('ram'     , :with => vTropas["ram"])
+  # fill_in('catapult', :with => vTropas["catapult"])
+  # fill_in('knight'  , :with => vTropas["knight"])
+  # fill_in('snob'    , :with => vTropas["snob"])
+
+  # if @world.archers
+  #   fill_in('archer'  , :with => vTropas["archer"])
+  #   fill_in('marcher' , :with => vTropas["marcher"])
+  # end
+
+  # page.click_button('Ataque')
+  # analisaBot
+
+end
+
+
+def sfarm(fromcoords)
+
+  page.visit('http://'+@world.name+'.tribalwars.com.br/game.php?village='+firstId.to_s+'&mode=attack&screen=report')
+  analisaBot
+
+  reports = readreports(page,fromcoords)
+
+  progressbar = ProgressBar.create(:progress_mark => '-' ,:title => "Analisando relatorios", :starting_at => 0, :total => reports.size, :format => '%a %B %p%% %t')    
+  reports.each {|report,dist|
+
+    page.visit(report) 
+    screen(page,"report01")
+    analisaBot
+
+    all('a').each { |a| 
+      if a[:class].to_s.include? "farm_icon_c"
+        a.click 
+        #a.select {|elt| elt.text == "Apagar" }.first.click
+      end
+    }
+
+    progressbar.increment
+
+  }
+end
+
+def janelabyname(name,x,y)
+  vetRet = Hash.new
+  cont = 0
+  @world.get_villages.each {|key, value|
+    if value[:name].include?  name 
+      _x = value[:xcoord].to_i
+      _y = value[:ycoord].to_i
+      dist    = Math.sqrt((x - _x) ** 2 + (y - _y) ** 2).to_i
+      vetRet["#{_x} #{_y}"] = dist
+    end 
+  }
+  return vetRet
+end
+
+
+def mercators(msg)
+  
+  progressbar = ProgressBar.create(:progress_mark => '-' ,:title => "Prepare", :starting_at => 0, :total => @player.villages.size, :format => '%a %B %p%% %t')    
+  @player.villages.each  {|key, ville|  
+    mercators = janelabyname("Mensagem do mercador",ville.xcoord,ville.ycoord).sort_by {|_key, value| value}
+
+    tox = mercators[0][0].split(" ")[0]
+    toy = mercators[0][0].split(" ")[1]
+
+    page.visit('http://'+@world.name+'.tribalwars.com.br/game.php?village='+ville.id.to_s+'&screen=overview')
+    analisaBot
+    wood  = page.find(:xpath, "//*[@id=\"wood\"]").text.to_i
+    stone = page.find(:xpath, "//*[@id=\"stone\"]").text.to_i
+    iron  = page.find(:xpath, "//*[@id=\"iron\"]").text.to_i
+    page.visit('http://'+@world.name+'.tribalwars.com.br/game.php?village='+ville.id.to_s+'&screen=market')
+    analisaBot
+    capacity = page.first(:xpath, "/html/body/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td[2]/table/tbody/tr/th[2]").text.split(" ")[4].to_i
+    ville.setresourcesto(wood,stone,iron,capacity,tox,toy)
+
+
+    page.visit('http://'+@world.name+'.tribalwars.com.br/game.php?village='+ville.id.to_s+'&screen=market')
+    analisaBot
+    fill_in('x'       , :with => tox)
+    fill_in('y'       , :with => toy)
+    all('a').each { |a| 
+      if a[:class].to_s.include? "insert wood"
+        a.click 
+      end
+      if a[:class].to_s.include? "insert stone"
+        a.click 
+      end
+      if a[:class].to_s.include? "insert iron"
+        a.click 
+      end
+    }
+    screen(page,"mercado1")
+    page.click_button('OK')
+    screen(page,"mercado2")
+    page.click_button('OK')
+    screen(page,"mercado3")
+
+    progressbar.increment
   }
 
-end 
+end
+
+
+def programado(msg)
+
+  puts msg
+
+  origem = @world.getVillageObjectByCoords(564,510)
+
+  puts origem.class
+
+  vetAttack = Hash.new
+  vetAttack = vetAttack.merge(setTroops 'spy=2')
+  vetAttack = vetAttack.merge(setTroops 'light=24')
+
+  attackTroops(origem, @world.getVillageObjectByCoords(564,507), vetAttack,"attack")
+  10.downto(1) { |c| 
+    puts c
+    sleep 1 
+  }
+  attackTroops(origem, @world.getVillageObjectByCoords(564,507), vetAttack,"attack")
+  
+
+
+end
+
+
+# attackTroops(fromVillage, toVillage, vTropas, ,"attack")
+
+
+# "564:510","564:507","17:34:00"
+# "564:510","561:509","17:32:22"
+# "564:510","565:513","17:32:22"
+# "564:510","567:510","17:34:00"
+# "564:510","567:512","17:27:50"
+# "564:510","561:508","17:27:56"
+# "564:510","566:510","17:44:00"
+# "564:510","562:510","17:44:00"
+# "564:510","568:510","17:24:00"
+# "564:510","560:509","17:22:46"
+# "564:510","560:511","17:22:46"
+# "564:510","563:514","17:22:46"
+# "564:510","562:511","17:41:38"
+# "564:510","560:508","17:19:16"
+# "564:510","559:510","17:14:00"
+# "564:510","563:505","17:13:00"
+# "564:510","569:509","17:13:00"
+# "564:510","562:515","17:10:08"
+# "564:510","566:515","17:10:08"
+# "564:510","560:506","17:07:25"
+# "564:510","568:514","17:07:25"
+# "564:510","567:515","17:05:41"
+# "564:510","569:513","17:05:41"
+
 
 
 
@@ -973,7 +1251,7 @@ opts = Slop.parse(:help => true, :strict => true) do
   on :m, :message=, 'Option message to send', as: Array,  delimiter: ':'
 end
 
-# validCommands = ['test','spys', 'screate', 'skill', 'farmall', 'clean', 'newfarmall', 'rename', 'shop', 'planattack', 'cleanothers']
+# validCommands = ['change', test','spys', 'screate', 'skill', 'farmall', 'clean', 'newfarmall', 'rename', 'shop', 'planattack', 'cleanothers']
 # raise "Invalid Command! Valid are: #{validCommands.inspect}\nTry -h or --help for help." unless validCommands.include?(opts[:command])
 
 case opts[:command]
@@ -993,15 +1271,33 @@ octopus.send(opts.to_hash[:command],opts.to_hash[:message])
 #   exit(0)
 # end
 
-#  rescue Exception => e
-#    puts e.message.red
-#    #puts e.backtrace
-# end
+# ruby Octopus.rb -c planAttack -p barbara -l xykoBR -w br52 -m 14:10:13:00:540-543,542-547,544-554,545-552,540-542,550-550,538-548,539-545,523-535
 
 
 
-# ataques sai 11:55
-# trem sai as 10:48
-
+# 564|507  
+# 551|509  
+# 565|513  
+# 567|510  
+# 567|512  
+# 561|508  
+# 566|510  
+# 564|512  
+# 562|510  
+# 568|510  
+# 560|509  
+# 560|511  
+# 563|514  
+# 562|511  
+# 560|508  
+# 559|510  
+# 563|505  
+# 569|509  
+# 562|515  
+# 566|515  
+# 560|506  
+# 568|514  
+# 567|515  
+# 569|513  
 
 

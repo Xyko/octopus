@@ -59,7 +59,7 @@ class World
           :xcoord    =>  xcoord,
           :ycoord    =>  ycoord,
           :user_id   =>  user_id,
-          :continent =>  ycoord.to_s[0]+xcoord.to_s[0],
+          #:continent =>  ycoord.to_s[0]+xcoord.to_s[0],
           
         }
 
@@ -108,11 +108,22 @@ class World
   end
     
   def getVillageByCoords(xcoord,ycoord)
-    @vet_villages.select{|k,v| v[:xcoord].to_i == xcoord && v[:ycoord].to_i == ycoord}.each{|k,v|
+    @vet_villages.select{|k,v| v[:xcoord].to_i == xcoord.to_i && v[:ycoord].to_i == ycoord.to_i}.each{|k,v|
       return v[:name]
     }
   end
   
+  def getVillageObjectByCoords(xcoord,ycoord)
+    @vet_villages.select{|k,v| v[:xcoord].to_i == xcoord.to_i && v[:ycoord].to_i == ycoord.to_i}.each{|k,v|
+      return Village.new(
+            :name     => v[:name],
+            :id       => v[:id],
+            :xcoord   => v[:xcoord],
+            :ycoord   => v[:ycoord],
+            :user_id  => v[:user_id])
+    }
+  end
+
   def initialize(options = {})
 
     @vet_players    = Hash.new
@@ -134,7 +145,7 @@ class World
   end
 
   def get_tranlated_name(name)
-      return  name.gsub(/[+]/,' ').gsub(/%3D/,'=').gsub(/%C3%A1/,'á').gsub(/%C3%A9/,'é').gsub(/%2A/,'*').gsub(/%3F/,'?').gsub(/%2B/,'+').gsub(/%7C/,'|').gsub(/%5B/,'[').gsub(/%5D/,']')
+      return  name.gsub(/[+]/,' ').gsub(/%3D/,'=').gsub(/%C3%A1/,'á').gsub(/%C3%A9/,'é').gsub(/%2A/,'*').gsub(/%3F/,'?').gsub(/%2B/,'+').gsub(/%7C/,'|').gsub(/%5B/,'[').gsub(/%5D/,']').gsub(/%21/,'!')
   end
 
 end

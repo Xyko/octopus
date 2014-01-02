@@ -58,3 +58,23 @@ fi
 mv /tmp/playerbr52.txt . 
 mv /tmp/villagebr52.txt . 
 mv /tmp/allybr52.txt . 
+
+#/bin/bash
+wget http://br56.tribalwars.com.br/map/player.txt -O /tmp/playerbr56.txt
+wget http://br56.tribalwars.com.br/map/village.txt -O /tmp/villagebr56.txt
+wget http://br56.tribalwars.com.br/map/ally.txt -O /tmp/allybr56.txt
+if [ -f playerbr56.txt ]
+then
+ rm playerbr56.txt
+fi
+if [ -f villagebr56.txt ]
+then
+ rm villagebr56.txt
+fi
+if [ -f allybr56.txt ]
+then
+ rm allybr56.txt
+fi
+mv /tmp/playerbr56.txt . 
+mv /tmp/villagebr56.txt . 
+mv /tmp/allybr56.txt . 

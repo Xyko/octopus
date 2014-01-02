@@ -1,52 +1,40 @@
 require 'rubygems'
-
-xi=10
-yi=14
-zi=7
-xf=0
-yf=0
-zf=0
-recursos=28
-
-puts "#{xi} #{yi} #{zi}"
-puts "#{xf} #{yf} #{zf}"
-
-while recursos >= 3
-
-	if recursos > 0
-		if xi > 0
-			xf += 1
-			recursos -= 1
-		end
-	end
-
-	if recursos > 0
-		if yi > 0
-			yf += 1
-			recursos -= 1
-		end
-	end
-
-	if recursos > 0
-		if zi > 0
-			zf += 1
-			recursos -= 1
-		end
-	end
-
-end
-
-puts "#{xi} #{yi} #{zi}"
-puts "#{xf} #{yf} #{zf}"
+require "redis"
 
 
 
 
+t1 = Time.new(2007,10,26,8,00,0, "+09:00")
+puts t1
 
 
 
+     
+HOTEL ROSEN INN INTERNATIONAL DRIVE = TARIFA DO APTO DUPLO E US$ 480,00 O PERÍODO
 
+ 
 
+2 – ALUGUEL DE CARRO COM A ALAMO – DE 03 A 11 / 12
+
+RETIRA E ENTREGA NO AEROPORTO DE ORLANDO
+
+CARRO MÉDIO – TIPO TOYOTA COROLLA – COM SEGUROS, TAXAS, IMPOSTOS, KM LIVRE E GPS
+
+TARIFA DE US$ 336,00 O PERÍODO
+
+ 
+
+3 – INGRESSOS ( PREÇOS POR PESSOA )
+
+Ø  4 DIAS DE DISNEY BÁSICO = US$ 308,00
+
+Ø  2 DIAS DE UNIVERSAL = US$ 166,00
+
+Ø  1 DIA DE SEA WORLD = US$ 96,00
+
+308
+166
+96
 
 
 
