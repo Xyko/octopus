@@ -9,7 +9,7 @@ require 'slop'
 require 'colorize'
 require 'ruby-progressbar'
 require 'time_difference'
-require 'termios'
+#require 'termios'
 
 load 'Player.rb'
 load 'World.rb'
