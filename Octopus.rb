@@ -1189,37 +1189,37 @@ def programado(msg)
 
   attackTroops(origem, @world.getVillageObjectByCoords(567,515), vetAttack,"attack")            
   attackTroops(origem, @world.getVillageObjectByCoords(569,513), vetAttack,"attack") 
-  sleep 1
+  sleep 1 * 60
   attackTroops(origem, @world.getVillageObjectByCoords(560,506), vetAttack,"attack")        
   attackTroops(origem, @world.getVillageObjectByCoords(568,514), vetAttack,"attack")           
-  sleep 3
+  sleep 3* 60
   attackTroops(origem, @world.getVillageObjectByCoords(562,515), vetAttack,"attack")           
   attackTroops(origem, @world.getVillageObjectByCoords(566,515), vetAttack,"attack")           
-  sleep 3
+  sleep 3* 60
   attackTroops(origem, @world.getVillageObjectByCoords(559,510), vetAttack,"attack")            
-  sllep 1
+  sleep 1* 60
   attackTroops(origem, @world.getVillageObjectByCoords(563,505), vetAttack,"attack")            
   attackTroops(origem, @world.getVillageObjectByCoords(569,509), vetAttack,"attack")           
-  sleep 1
+  sleep 1* 60
   attackTroops(origem, @world.getVillageObjectByCoords(559,510), vetAttack,"attack") 
-  sleep 5
+  sleep 5* 60
   attackTroops(origem, @world.getVillageObjectByCoords(560,508), vetAttack,"attack")            
-  sleep 3
+  sleep 3* 60
   attackTroops(origem, @world.getVillageObjectByCoords(560,509), vetAttack,"attack")            
   attackTroops(origem, @world.getVillageObjectByCoords(563,514), vetAttack,"attack")            
-  sleep 1
+  sleep 1* 60
   attackTroops(origem, @world.getVillageObjectByCoords(568,510), vetAttack,"attack")            
-  sleep 2
+  sleep 2* 60
   attackTroops(origem, @world.getVillageObjectByCoords(561,508), vetAttack,"attack")            
-  sleep 5
+  sleep 5* 60
   attackTroops(origem, @world.getVillageObjectByCoords(561,509), vetAttack,"attack")            
   attackTroops(origem, @world.getVillageObjectByCoords(565,513), vetAttack,"attack")            
-  sleep 2
+  sleep 2* 60
   attackTroops(origem, @world.getVillageObjectByCoords(564,507), vetAttack,"attack")            
   attackTroops(origem, @world.getVillageObjectByCoords(567,510 ), vetAttack,"attack")           
-  sleep 7
+  sleep 7* 60
   attackTroops(origem, @world.getVillageObjectByCoords(562,511), vetAttack,"attack")            
-  sleep 3
+  sleep 3* 60
   attackTroops(origem, @world.getVillageObjectByCoords(566,510), vetAttack,"attack")            
   attackTroops(origem, @world.getVillageObjectByCoords(564,512), vetAttack,"attack")            
   attackTroops(origem, @world.getVillageObjectByCoords(562,510), vetAttack,"attack")            
